@@ -1,0 +1,156 @@
+# ==================================================================
+# CD Pipeline — Hotel Booking Platform
+# Triggers: Push to main (after CI passes)
+# Steps: Build Docker → Push to ECR → Deploy to ECS/K8s → Smoke Test
+# ==================================================================
+name: CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  NODE_VERSION: '20'
+  AWS_REGION: us-east-1
+  ECR_BACKEND_REPO: hotel-booking-backend
+  ECR_FRONTEND_REPO: hotel-booking-frontend
+
+jobs:
+  # ============================================
+  # Job 1: Build & Push Docker Images to ECR
+  # ============================================
+  build-and-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      backend-image: ${{ steps.build-backend.outputs.image }}
+      frontend-image: ${{ steps.build-frontend.outputs.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        id: tag
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "tag=${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "date_tag=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
+
+      - name: Build & Push Backend Image
+        id: build-backend
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          docker build \
+            --target production \
+            -t $ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_BACKEND_REPO:latest \
+            ./backend
+          docker push $ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
+          echo "image=$ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Build & Push Frontend Image
+        id: build-frontend
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          docker build \
+            --target production \
+            --build-arg VITE_API_URL=${{ secrets.PRODUCTION_API_URL }} \
+            -t $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_FRONTEND_REPO:latest \
+            ./frontend
+          docker push $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_FRONTEND_REPO:latest
+          echo "image=$ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  # ============================================
+  # Job 2: Deploy to Kubernetes
+  # ============================================
+  deploy-k8s:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ env.AWS_REGION }} \
+            --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+      - name: Update backend image in deployment
+        run: |
+          kubectl set image deployment/backend-deployment \
+            backend=${{ needs.build-and-push.outputs.backend-image }} \
+            -n hotel-booking
+
+      - name: Update frontend image in deployment
+        run: |
+          kubectl set image deployment/frontend-deployment \
+            frontend=${{ needs.build-and-push.outputs.frontend-image }} \
+            -n hotel-booking
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/backend-deployment -n hotel-booking --timeout=300s
+          kubectl rollout status deployment/frontend-deployment -n hotel-booking --timeout=300s
+
+  # ============================================
+  # Job 3: Smoke Tests after Deploy
+  # ============================================
+  smoke-test:
+    name: Post-Deploy Smoke Test
+    runs-on: ubuntu-latest
+    needs: deploy-k8s
+    steps:
+      - name: Health check
+        run: |
+          echo "Running smoke tests against production..."
+          
+          # Backend health check
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            ${{ secrets.PRODUCTION_API_URL }}/health || echo "000")
+          
+          if [ "$HEALTH_STATUS" = "200" ]; then
+            echo "✅ Backend health check passed"
+          else
+            echo "❌ Backend health check failed (status: $HEALTH_STATUS)"
+            exit 1
+          fi
+
+      - name: Notify success
+        if: success()
+        run: echo "🚀 Deployment to production completed successfully!"
+
+      - name: Notify failure
+        if: failure()
+        run: echo "❌ Deployment failed! Check the logs above."
