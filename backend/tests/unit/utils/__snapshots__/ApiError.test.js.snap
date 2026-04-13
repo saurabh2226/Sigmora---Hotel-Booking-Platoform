@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ApiError should snapshot common error structures 1`] = `
+{
+  "message": "Bad Request",
+  "statusCode": 400,
+  "success": false,
+}
+`;
+
+exports[`ApiError should snapshot common error structures 2`] = `
+{
+  "message": "Unauthorized",
+  "statusCode": 401,
+  "success": false,
+}
+`;
+
+exports[`ApiError should snapshot common error structures 3`] = `
+{
+  "message": "Forbidden",
+  "statusCode": 403,
+  "success": false,
+}
+`;
+
+exports[`ApiError should snapshot common error structures 4`] = `
+{
+  "message": "Not Found",
+  "statusCode": 404,
+  "success": false,
+}
+`;
+
+exports[`ApiError should snapshot common error structures 5`] = `
+{
+  "message": "Internal Server Error",
+  "statusCode": 500,
+  "success": false,
+}
+`;
