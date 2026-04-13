@@ -6,9 +6,14 @@ const mongoose = require('mongoose');
 jest.setTimeout(120000);
 
 let mongoServer;
+const MONGOMS_VERSION = process.env.MONGOMS_VERSION || '7.0.14';
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryServer.create({
+    binary: {
+      version: MONGOMS_VERSION,
+    },
+  });
   const mongoUri = mongoServer.getUri();
   process.env.MONGODB_URI = mongoUri;
   await mongoose.connect(mongoUri);

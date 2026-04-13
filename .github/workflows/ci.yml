@@ -152,6 +152,8 @@ jobs:
         working-directory: ./backend
         env:
           NODE_ENV: test
+          DISABLE_SQL_MIRROR: 'true'
+          MONGOMS_VERSION: 7.0.14
           JWT_ACCESS_SECRET: ci_test_access_secret
           JWT_REFRESH_SECRET: ci_test_refresh_secret
 
@@ -182,6 +184,8 @@ jobs:
         working-directory: ./backend
         env:
           NODE_ENV: test
+          DISABLE_SQL_MIRROR: 'true'
+          MONGOMS_VERSION: 7.0.14
           JWT_ACCESS_SECRET: ci_test_access_secret
           JWT_REFRESH_SECRET: ci_test_refresh_secret
 
@@ -258,6 +262,8 @@ jobs:
         working-directory: ./backend
         env:
           NODE_ENV: test
+          DISABLE_SQL_MIRROR: 'true'
+          MONGOMS_VERSION: 7.0.14
           JWT_ACCESS_SECRET: ci_test_access_secret
           JWT_REFRESH_SECRET: ci_test_refresh_secret
 
