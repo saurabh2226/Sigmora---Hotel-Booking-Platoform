@@ -1,0 +1,19 @@
+{
+  "name": "hotel-booking-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test",
+    "test:auth": "npx playwright test tests/auth.spec.js --project=chromium",
+    "test:booking": "npx playwright test tests/booking.spec.js --project=chromium",
+    "test:hotels": "npx playwright test tests/hotels.spec.js --project=chromium",
+    "test:capstone": "npx playwright test tests/capstone.spec.js --project=chromium",
+    "test:headed": "npx playwright test --headed",
+    "test:ui:app": "npx playwright test --ui",
+    "report": "npx playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0"
+  }
+}
