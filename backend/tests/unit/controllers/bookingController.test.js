@@ -7,6 +7,30 @@ jest.mock('../../../src/services/availabilityService');
 jest.mock('../../../src/services/notificationService');
 jest.mock('../../../src/services/emailService');
 jest.mock('../../../src/socket/socketHandler');
+jest.mock('../../../src/services/pricingService', () => ({
+  calculateDynamicPricing: jest.fn(() => ({
+    basePrice: 6000,
+    taxes: 720,
+    fees: 0,
+    discount: 0,
+    totalPrice: 6720,
+    nights: 3,
+  })),
+}));
+jest.mock('../../../src/services/bookingLifecycleService', () => ({
+  acquireRoomHold: jest.fn().mockResolvedValue({
+    holdExpiresAt: new Date('2030-01-01T00:00:00.000Z'),
+  }),
+  confirmRoomInventoryForBooking: jest.fn(),
+  expireStalePendingBookings: jest.fn().mockResolvedValue(undefined),
+  isHoldActive: jest.fn(() => false),
+  releaseConfirmedInventoryForBooking: jest.fn(),
+  releaseRoomHoldForBooking: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('../../../src/services/sqlMirrorService', () => ({
+  syncBookingToSql: jest.fn().mockResolvedValue(null),
+  syncCouponToSql: jest.fn().mockResolvedValue(null),
+}));
 
 const Booking = require('../../../src/models/Booking');
 const Room = require('../../../src/models/Room');
@@ -56,6 +80,7 @@ describe('BookingController', () => {
         hotel: 'hotel1',
         room: 'room1',
         status: 'pending',
+        holdExpiresAt: new Date('2030-01-01T00:00:00.000Z'),
       });
 
       const { req, res, next } = createMocks(

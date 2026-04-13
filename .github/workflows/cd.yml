@@ -15,6 +15,7 @@ env:
   AWS_REGION: us-east-1
   ECR_BACKEND_REPO: hotel-booking-backend
   ECR_FRONTEND_REPO: hotel-booking-frontend
+  HAS_AWS_DEPLOY_SECRETS: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
 
 jobs:
   # ============================================
@@ -23,6 +24,7 @@ jobs:
   build-and-push:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
+    if: ${{ env.HAS_AWS_DEPLOY_SECRETS == 'true' }}
     permissions:
       id-token: write
       contents: read

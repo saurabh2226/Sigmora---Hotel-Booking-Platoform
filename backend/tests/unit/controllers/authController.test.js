@@ -1,11 +1,20 @@
 // Mock dependencies before requiring the controller
 jest.mock('../../../src/models/User');
 jest.mock('../../../src/utils/generateToken');
-jest.mock('../../../src/services/emailService');
+jest.mock('../../../src/services/emailService', () => ({
+  sendVerificationEmail: jest.fn(),
+  sendVerificationOtpEmail: jest.fn().mockResolvedValue(true),
+  sendPasswordResetEmail: jest.fn(),
+  sendPasswordResetOtpEmail: jest.fn(),
+  sendPasswordChangedEmail: jest.fn().mockResolvedValue(true),
+}));
+jest.mock('../../../src/services/sqlMirrorService', () => ({
+  syncUserToSql: jest.fn().mockResolvedValue(null),
+}));
 
 const User = require('../../../src/models/User');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../../../src/utils/generateToken');
-const { sendVerificationEmail } = require('../../../src/services/emailService');
+const { sendVerificationEmail, sendVerificationOtpEmail } = require('../../../src/services/emailService');
 
 // Import controller functions
 const {
@@ -56,6 +65,7 @@ describe('AuthController', () => {
         _id: 'user123',
         name: 'John Doe',
         email: 'john@example.com',
+        role: 'user',
         refreshToken: '',
         lastLogin: null,
         save: jest.fn().mockResolvedValue(true),
@@ -64,9 +74,7 @@ describe('AuthController', () => {
 
       User.findOne.mockResolvedValue(null); // no existing user
       User.create.mockResolvedValue(mockUser);
-      generateAccessToken.mockReturnValue('access_token_123');
-      generateRefreshToken.mockReturnValue('refresh_token_123');
-      sendVerificationEmail.mockResolvedValue(true);
+      sendVerificationOtpEmail.mockResolvedValue(true);
 
       const { req, res, next } = createMocks({
         name: 'John Doe',
@@ -80,9 +88,9 @@ describe('AuthController', () => {
 
       expect(User.findOne).toHaveBeenCalledWith({ email: 'john@example.com' });
       expect(User.create).toHaveBeenCalled();
-      expect(generateAccessToken).toHaveBeenCalledWith('user123');
+      expect(sendVerificationOtpEmail).toHaveBeenCalledWith(mockUser, expect.any(String));
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.cookie).toHaveBeenCalledWith('refreshToken', 'refresh_token_123', expect.any(Object));
+      expect(res.cookie).not.toHaveBeenCalled();
       expect(res.json).toHaveBeenCalled();
     });
 
@@ -109,6 +117,8 @@ describe('AuthController', () => {
         _id: 'user123',
         email: 'john@example.com',
         isActive: true,
+        isVerified: true,
+        role: 'user',
         refreshToken: '',
         lastLogin: null,
         comparePassword: jest.fn().mockResolvedValue(true),
@@ -218,7 +228,13 @@ describe('AuthController', () => {
 
   describe('getMe', () => {
     it('should return the current user', async () => {
-      const mockUser = { _id: 'user123', name: 'John', email: 'john@example.com' };
+      const mockUser = {
+        _id: 'user123',
+        name: 'John',
+        email: 'john@example.com',
+        role: 'user',
+        save: jest.fn().mockResolvedValue(true),
+      };
       User.findById.mockResolvedValue(mockUser);
 
       const { req, res, next } = createMocks({}, {}, {}, { _id: 'user123' });
@@ -236,6 +252,7 @@ describe('AuthController', () => {
     it('should change password successfully', async () => {
       const mockUser = {
         _id: 'user123',
+        role: 'user',
         password: 'hashed_old',
         comparePassword: jest.fn().mockResolvedValue(true),
         save: jest.fn().mockResolvedValue(true),
@@ -308,6 +325,7 @@ describe('AuthController', () => {
     it('should complete Google OAuth login and redirect back to the frontend', async () => {
       const mockUser = {
         _id: 'google-user-123',
+        role: 'user',
         refreshToken: '',
         lastLogin: null,
         save: jest.fn().mockResolvedValue(true),

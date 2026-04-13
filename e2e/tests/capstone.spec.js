@@ -265,7 +265,7 @@ test.describe('Capstone UI Flows', () => {
     }));
 
     await page.goto('/admin/users');
-    await expect(page.locator('h1')).toContainText('Manage Users');
+    await expect(page.getByRole('heading', { name: 'Manage Users' })).toBeVisible();
     await expect(page.locator('text=Managed User')).toBeVisible();
     await page.click('button:has-text("Deactivate")');
     await expect(page.locator('span').filter({ hasText: /^inactive$/i })).toBeVisible();

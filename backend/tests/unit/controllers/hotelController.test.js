@@ -3,6 +3,16 @@ jest.mock('../../../src/models/Hotel');
 jest.mock('../../../src/models/Room');
 jest.mock('../../../src/services/availabilityService');
 jest.mock('../../../src/config/cloudinary');
+jest.mock('../../../src/utils/offerUtils', () => ({
+  attachOffersToHotels: jest.fn(async (hotels) => hotels),
+}));
+jest.mock('../../../src/socket/socketHandler', () => ({
+  emitHotelCatalogUpdate: jest.fn(),
+  emitHotelDetailUpdate: jest.fn(),
+}));
+jest.mock('../../../src/services/sqlMirrorService', () => ({
+  syncHotelToSql: jest.fn().mockResolvedValue(null),
+}));
 
 const Hotel = require('../../../src/models/Hotel');
 const Room = require('../../../src/models/Room');
@@ -189,15 +199,23 @@ describe('HotelController', () => {
 
   describe('updateHotel', () => {
     it('should update hotel', async () => {
-      const mockHotel = { _id: 'h1', title: 'Updated Hotel' };
+      const mockHotel = {
+        _id: 'h1',
+        title: 'Original Hotel',
+        set: jest.fn(function set(updates) {
+          Object.assign(this, updates);
+        }),
+        save: jest.fn().mockResolvedValue(true),
+      };
       Hotel.findById.mockResolvedValue(mockHotel);
-      Hotel.findByIdAndUpdate.mockResolvedValue({ ...mockHotel, title: 'Updated Hotel' });
 
       const { req, res, next } = createMocks({}, { id: 'h1' }, { title: 'Updated Hotel' });
 
       updateHotel(req, res, next);
       await flushPromises();
 
+      expect(mockHotel.set).toHaveBeenCalledWith({ title: 'Updated Hotel' });
+      expect(mockHotel.save).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
     });
 
