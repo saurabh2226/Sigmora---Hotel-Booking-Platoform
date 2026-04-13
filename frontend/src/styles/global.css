@@ -1,0 +1,140 @@
+/* ================================================
+   Global CSS — Layout, Utilities & Shared Styles
+   ================================================ */
+
+@import './variables.css';
+@import './reset.css';
+@import './animations.css';
+
+/* ---- Layout ---- */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+
+.page {
+  min-height: 100vh;
+  padding-top: var(--navbar-height);
+}
+
+/* ---- Section Titles (Editorial Style) ---- */
+.section-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-2);
+}
+
+.section-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+  margin-bottom: var(--space-3);
+  display: block;
+}
+
+.section-subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-muted);
+  max-width: 560px;
+  line-height: 1.7;
+}
+
+/* ---- Text Gradient ---- */
+.text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ---- Glass Effect ---- */
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+}
+
+/* ---- Flex Utilities ---- */
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-center { display: flex; justify-content: center; align-items: center; }
+.flex-col { display: flex; flex-direction: column; }
+
+/* ---- Form Validation Styles ---- */
+.field-error {
+  color: var(--color-danger);
+  font-size: var(--font-size-xs);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: fadeIn 0.2s ease;
+}
+
+.input-error {
+  border-color: var(--color-danger) !important;
+  background: var(--color-danger-container) !important;
+}
+
+.input-success {
+  border-color: var(--color-success) !important;
+}
+
+/* ---- Status Badge ---- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.badge-primary { background: var(--color-primary-fixed); color: var(--color-primary); }
+.badge-success { background: var(--color-success-light); color: var(--color-success); }
+.badge-warning { background: var(--color-warning-light); color: var(--color-tertiary); }
+.badge-danger { background: var(--color-danger-container); color: var(--color-danger); }
+
+/* ---- Tooltip ---- */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: var(--color-text-primary);
+  color: var(--color-text-on-primary);
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+[data-tooltip]:hover::after { opacity: 1; }
+
+/* ---- Responsive Breakpoints ---- */
+@media (max-width: 1024px) {
+  .container { padding: 0 var(--space-5); }
+}
+
+@media (max-width: 768px) {
+  .container { padding: 0 var(--space-4); }
+  .section-title { font-size: var(--font-size-2xl); }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 var(--space-3); }
+}

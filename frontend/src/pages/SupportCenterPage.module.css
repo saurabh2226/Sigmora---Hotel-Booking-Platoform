@@ -1,0 +1,438 @@
+.page {
+  padding-top: 100px;
+  padding-bottom: var(--space-10);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+}
+
+.header h1 {
+  font-family: var(--font-display);
+  font-size: var(--font-size-4xl);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.header p {
+  color: var(--color-text-muted);
+  max-width: 72ch;
+  line-height: 1.7;
+}
+
+.headerActions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: var(--space-6);
+}
+
+.assistantPanel,
+.sidebar,
+.panelCard,
+.emptyPanel {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xs);
+}
+
+.assistantPanel {
+  padding: var(--space-6);
+  margin-top: var(--space-6);
+}
+
+.assistantHeader {
+  margin-bottom: var(--space-4);
+}
+
+.assistantHeader h2 {
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.assistantHeader p {
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.assistantMessages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: var(--space-5);
+}
+
+.assistantBubble {
+  max-width: 100%;
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+}
+
+.assistantBubble strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-text-primary);
+}
+
+.assistantBubble p {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+.assistantReply {
+  background: rgba(15, 118, 110, 0.06);
+  border-color: rgba(15, 118, 110, 0.14);
+}
+
+.assistantUser {
+  background: var(--color-surface-container-low);
+}
+
+.assistantHotelList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.assistantHotelCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-3);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(15, 118, 110, 0.12);
+}
+
+.assistantHotelCard strong {
+  margin: 0;
+}
+
+.assistantHotelCard span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.assistantForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sidebar {
+  padding: var(--space-5);
+  height: fit-content;
+  position: sticky;
+  top: calc(var(--navbar-height) + var(--space-4));
+}
+
+.sidebarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.sidebarHeader h2 {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+}
+
+.sidebarHeader span {
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-container-low);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.threadList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.threadItem {
+  width: 100%;
+  text-align: left;
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-container-low);
+  border: 1px solid transparent;
+}
+
+.threadItem strong {
+  color: var(--color-text-primary);
+}
+
+.threadItem p,
+.threadItem small {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-text-muted);
+}
+
+.threadItemActive {
+  border-color: rgba(15, 118, 110, 0.22);
+  background: rgba(15, 118, 110, 0.08);
+}
+
+.chatPanel {
+  min-width: 0;
+}
+
+.assistantLauncher {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  border-radius: var(--radius-2xl);
+  border: 1px solid rgba(15, 118, 110, 0.12);
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(20, 184, 166, 0.04));
+}
+
+.assistantLauncher h2 {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xl);
+  margin-bottom: 6px;
+}
+
+.assistantLauncher p {
+  max-width: 72ch;
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.hotelSupportBadge {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--space-4);
+  padding: 12px 14px;
+  border-radius: var(--radius-xl);
+  background: rgba(15, 118, 110, 0.08);
+  border: 1px solid rgba(15, 118, 110, 0.14);
+}
+
+.hotelSupportBadge span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hotelSupportBadge strong {
+  color: var(--color-text-primary);
+}
+
+.panelCard {
+  padding: var(--space-6);
+}
+
+.chatHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+
+.chatHeader h2 {
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.chatHeader p {
+  color: var(--color-text-muted);
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 320px;
+  max-height: 560px;
+  overflow-y: auto;
+  padding: var(--space-2) 0;
+}
+
+.messageBubble {
+  max-width: min(70%, 560px);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+}
+
+.messageBubble strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-text-primary);
+}
+
+.messageBubble p {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+.messageBubble small {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.messageMine {
+  align-self: flex-end;
+  background: rgba(15, 118, 110, 0.09);
+  border-color: rgba(15, 118, 110, 0.18);
+}
+
+.messageOther {
+  align-self: flex-start;
+  background: var(--color-surface-container-low);
+}
+
+.messageForm,
+.stack,
+.assistantForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.messageForm {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.messageForm textarea,
+.stack textarea,
+.stack input,
+.assistantForm textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-container-low);
+  color: var(--color-text-primary);
+  resize: vertical;
+}
+
+.stack label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.primaryBtn,
+.ghostBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+}
+
+.primaryBtn {
+  background: var(--gradient-primary);
+  color: white;
+}
+
+.ghostBtn {
+  background: var(--color-surface-container-low);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.inlineActions {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.open {
+  background: rgba(16, 185, 129, 0.12);
+  color: #0f9f73;
+}
+
+.closed {
+  background: rgba(107, 114, 128, 0.12);
+  color: #6b7280;
+}
+
+.emptyState,
+.emptyPanel {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--color-text-muted);
+  gap: var(--space-3);
+}
+
+.emptyState {
+  min-height: 180px;
+}
+
+.emptyPanel {
+  min-height: 520px;
+  padding: var(--space-8);
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+  }
+
+  .assistantLauncher {
+    align-items: flex-start;
+  }
+
+  .messageBubble {
+    max-width: 100%;
+  }
+}

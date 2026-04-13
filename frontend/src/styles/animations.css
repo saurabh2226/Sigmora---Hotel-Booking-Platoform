@@ -1,0 +1,73 @@
+/* ================================================
+   Animations — Micro-interactions & Page Transitions
+   ================================================ */
+
+/* Core Page Animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInDown { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInLeft { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes fadeInRight { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@keyframes scaleInBounce { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Loading & Feedback */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+/* Progress & Indicator */
+@keyframes progressGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes checkmark { from { stroke-dashoffset: 56; } to { stroke-dashoffset: 0; } }
+
+/* Shake for validation errors */
+@keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); } 20%, 40%, 60%, 80% { transform: translateX(4px); } }
+
+/* Skeleton loading */
+@keyframes skeleton { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+/* Subtle hover lift */
+@keyframes hoverLift {
+  from { transform: translateY(0); box-shadow: var(--shadow-sm); }
+  to { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+}
+
+/* Utility animation classes */
+.animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+.animate-fadeInUp { animation: fadeInUp 0.5s ease-out; }
+.animate-fadeInDown { animation: fadeInDown 0.5s ease-out; }
+.animate-scaleIn { animation: scaleIn 0.3s ease-out; }
+.animate-slideDown { animation: slideDown 0.2s ease-out; }
+.animate-shake { animation: shake 0.5s ease-out; }
+.animate-pulse { animation: pulse 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-breathe { animation: breathe 4s ease-in-out infinite; }
+
+/* Staggered animations */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Skeleton loader class */
+.skeleton {
+  background: linear-gradient(90deg, var(--color-surface-container-low) 25%, var(--color-surface-container-high) 50%, var(--color-surface-container-low) 75%);
+  background-size: 200% 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}

@@ -1,0 +1,5 @@
+.fullPage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--color-bg); z-index: 9999; }
+.spinner { border: 3px solid var(--color-border); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+.sm { width: 20px; height: 20px; }
+.md { width: 36px; height: 36px; }
+.lg { width: 56px; height: 56px; }

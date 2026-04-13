@@ -1,0 +1,558 @@
+.page {
+  padding-top: 100px;
+  padding-bottom: var(--space-10);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+}
+
+.header h1 {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  margin-bottom: var(--space-2);
+  color: var(--color-text-primary);
+}
+
+.header p {
+  color: var(--color-text-muted);
+  max-width: 70ch;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.primaryBtn,
+.secondaryBtn,
+.dangerBtn,
+.ghostBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  transition: transform var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.primaryBtn {
+  background: var(--gradient-primary);
+  color: white;
+}
+
+.secondaryBtn {
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+}
+
+.ghostBtn {
+  color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.dangerBtn {
+  color: white;
+  background: var(--color-danger);
+}
+
+.primaryBtn:hover,
+.secondaryBtn:hover,
+.dangerBtn:hover,
+.ghostBtn:hover {
+  transform: translateY(-1px);
+}
+
+.panel {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-xs);
+}
+
+.alertBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(15, 118, 110, 0.16);
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(20, 184, 166, 0.05));
+}
+
+.alertBanner strong {
+  display: block;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+}
+
+.alertBanner p {
+  color: var(--color-text-secondary);
+  max-width: 70ch;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.gridTwo {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+
+.centeredPanel {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.panelIntro {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+
+.panelIntro h2,
+.hotelListHeader h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.panelIntro p,
+.hotelListHeader p {
+  color: var(--color-text-muted);
+  max-width: 68ch;
+}
+
+.formShell {
+  max-width: 940px;
+  margin: 0 auto;
+}
+
+.metricCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+}
+
+.metricCard strong {
+  display: block;
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.metricCard span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.toolbar {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.toolbar > * {
+  flex: 1 1 180px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-container-low);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.formFull {
+  grid-column: 1 / -1;
+}
+
+.checkboxGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-2);
+}
+
+.checkboxItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  margin-top: 6px;
+}
+
+.tableWrap {
+  overflow: auto;
+}
+
+.imagePreviewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.imagePreviewCard {
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+}
+
+.imagePreviewCard img {
+  display: block;
+  width: 100%;
+  height: 116px;
+  object-fit: cover;
+}
+
+.imagePreviewCard figcaption {
+  padding: 10px 12px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.existingGalleryBlock {
+  margin-top: var(--space-4);
+}
+
+.table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+  font-size: var(--font-size-sm);
+}
+
+.table th {
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.table td {
+  color: var(--color-text-primary);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.tagRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.tag {
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-container-low);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.roomPreviewList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: var(--space-4);
+}
+
+.roomPreviewItem {
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-container-low);
+  border: 1px solid var(--color-border);
+}
+
+.roomPreviewItem strong {
+  display: block;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.roomPreviewItem span {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.hotelCard,
+.reviewCard,
+.listCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+}
+
+.hotelCollectionPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.hotelListHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.hotelListSearch {
+  width: min(360px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hotelCardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-5);
+}
+
+.hotelListingCard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.hotelVisual {
+  position: relative;
+  min-height: 220px;
+  background: var(--color-surface-container-low);
+}
+
+.hotelVisual img {
+  display: block;
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.hotelImageCounter {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  padding: 7px 11px;
+  border-radius: var(--radius-full);
+  background: rgba(15, 23, 42, 0.72);
+  color: white;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.hotelCardBody {
+  padding: var(--space-5);
+}
+
+.hotelCardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.hotelGalleryStrip {
+  display: flex;
+  gap: 10px;
+  margin-top: var(--space-4);
+}
+
+.hotelGalleryThumb,
+.hotelGalleryMore {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-container-low);
+}
+
+.hotelGalleryThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hotelGalleryMore {
+  display: grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+}
+
+.paginationBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.pageNumberRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hotelCard h3,
+.reviewCard h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.metaText {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.emptyState {
+  text-align: center;
+  padding: var(--space-10);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-xl);
+  color: var(--color-text-muted);
+}
+
+.inlineActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.responseBox {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-container-low);
+  border: 1px solid var(--color-border);
+}
+
+.responseBox strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 960px) {
+  .gridTwo {
+    grid-template-columns: 1fr;
+  }
+
+  .hotelListHeader {
+    align-items: stretch;
+  }
+
+  .hotelListSearch {
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .page {
+    padding-top: 88px;
+  }
+
+  .hotelCardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .paginationBar {
+    justify-content: center;
+  }
+}

@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+:root {
+  --color-primary: #0f766e;
+  --color-primary-container: #115e59;
+  --color-primary-fixed: #ccfbf1;
+  --color-primary-fixed-dim: #99f6e4;
+  --color-primary-light: #2dd4bf;
+  --color-secondary: #c2410c;
+  --color-secondary-container: #ffedd5;
+  --color-tertiary: #b45309;
+  --color-tertiary-container: #fef3c7;
+
+  --color-success: #10b981;
+  --color-success-light: #d1fae5;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fef3c7;
+  --color-danger: #dc2626;
+  --color-danger-container: #fee2e2;
+  --color-info: #3b82f6;
+
+  --color-bg: #fffaf1;
+  --color-bg-secondary: #f8f3e8;
+  --color-bg-card: #ffffff;
+  --color-bg-elevated: #eef8f5;
+  --color-surface: #fffaf1;
+  --color-surface-container-low: #f5efe1;
+  --color-surface-container: #efe8d6;
+  --color-surface-container-high: #e5ddc7;
+  --color-surface-container-highest: #ddd3bc;
+  --color-surface-variant: #efe8d6;
+  --color-surface-dim: #ece3cf;
+
+  --color-text-primary: #172426;
+  --color-text-secondary: #365055;
+  --color-text-muted: #6d7f83;
+  --color-text-on-primary: #ffffff;
+  --color-text-inverse: #f8fbfb;
+
+  --color-border: rgba(23, 36, 38, 0.08);
+  --color-border-hover: rgba(15, 118, 110, 0.25);
+  --color-outline: #76908f;
+  --color-outline-variant: #d7cfbd;
+
+  --gradient-primary: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  --gradient-hero: radial-gradient(circle at top left, rgba(20, 184, 166, 0.18), transparent 32%), linear-gradient(135deg, #fffaf1 0%, #eef8f5 45%, #f6efe2 100%);
+  --gradient-warm: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.42) 100%);
+  --overlay-card: rgba(255, 255, 255, 0.82);
+  --overlay-card-strong: rgba(255, 255, 255, 0.9);
+  --overlay-soft: rgba(255, 255, 255, 0.72);
+
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Manrope', system-ui, -apple-system, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-5xl: 3rem;
+  --font-size-display: clamp(2.5rem, 6vw, 4.5rem);
+
+  --space-0: 0; --space-1: 0.25rem; --space-2: 0.5rem;
+  --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem;
+  --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+  --space-12: 3rem; --space-14: 3.5rem; --space-16: 4rem;
+  --space-20: 5rem; --space-24: 6rem; --space-32: 8rem;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 3rem;
+  --radius-full: 9999px;
+
+  --shadow-xs: 0 10px 20px rgba(20, 36, 38, 0.03);
+  --shadow-sm: 0 14px 30px rgba(20, 36, 38, 0.05);
+  --shadow-md: 0 18px 40px rgba(20, 36, 38, 0.08);
+  --shadow-lg: 0 30px 60px rgba(20, 36, 38, 0.12);
+  --shadow-xl: 0 36px 80px rgba(20, 36, 38, 0.16);
+  --shadow-2xl: 0 50px 110px rgba(20, 36, 38, 0.18);
+  --shadow-glow: 0 18px 40px rgba(15, 118, 110, 0.18);
+  --shadow-glow-strong: 0 26px 60px rgba(15, 118, 110, 0.22);
+
+  --glass-bg: rgba(255, 255, 255, 0.68);
+  --glass-border: rgba(15, 118, 110, 0.12);
+  --glass-blur: blur(20px);
+
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --z-base: 1; --z-dropdown: 100; --z-sticky: 200;
+  --z-overlay: 300; --z-modal: 400; --z-toast: 500;
+
+  --max-width: 1280px;
+  --navbar-height: 72px;
+}
+
+[data-theme='dark'] {
+  --color-bg: #122124;
+  --color-bg-secondary: #172a2e;
+  --color-bg-card: #1c3135;
+  --color-bg-elevated: #203a3f;
+  --color-surface: #122124;
+  --color-surface-container-low: #172a2e;
+  --color-surface-container: #1c3135;
+  --color-surface-container-high: #234046;
+  --color-surface-container-highest: #2a4b52;
+  --color-surface-variant: #264349;
+  --color-surface-dim: #0d181a;
+
+  --color-text-primary: #edf7f5;
+  --color-text-secondary: #bfd6d1;
+  --color-text-muted: #89a7a1;
+  --color-text-inverse: #172426;
+
+  --color-border: rgba(191, 214, 209, 0.12);
+  --color-border-hover: rgba(45, 212, 191, 0.32);
+
+  --glass-bg: rgba(18, 33, 36, 0.78);
+  --glass-border: rgba(191, 214, 209, 0.12);
+  --gradient-hero: radial-gradient(circle at top left, rgba(20, 184, 166, 0.18), transparent 28%), linear-gradient(135deg, #102023 0%, #173136 46%, #1e3d43 100%);
+  --overlay-card: rgba(20, 34, 37, 0.86);
+  --overlay-card-strong: rgba(25, 42, 46, 0.92);
+  --overlay-soft: rgba(24, 39, 42, 0.78);
+}

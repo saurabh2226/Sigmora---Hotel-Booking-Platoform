@@ -1,0 +1,268 @@
+.page {
+  padding-top: 100px;
+  padding-bottom: var(--space-10);
+}
+
+.header,
+.filterHeader,
+.metricMeta,
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.header {
+  margin-bottom: var(--space-6);
+}
+
+.header h1,
+.sectionHeader h2,
+.summaryCard h2,
+.filterHeader h2 {
+  color: var(--color-text-primary);
+}
+
+.header h1 {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--space-2);
+}
+
+.header p,
+.sectionHeader p,
+.comparisonBanner p,
+.metaText {
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.headerActions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.primaryBtn,
+.secondaryBtn,
+.ghostBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+}
+
+.primaryBtn {
+  background: var(--gradient-primary);
+  color: white;
+}
+
+.secondaryBtn {
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.ghostBtn {
+  background: var(--color-surface-container-low);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.filterPanel,
+.metricCard,
+.tablePanel,
+.summaryCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+}
+
+.filterPanel,
+.tablePanel,
+.summaryCard {
+  padding: var(--space-6);
+}
+
+.filterHeader {
+  margin-bottom: var(--space-4);
+}
+
+.filterHeader span {
+  padding: 7px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.filterGrid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filterGrid label span {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.filterGrid select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-container-low);
+  color: var(--color-text-primary);
+}
+
+.checkboxField {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 10px !important;
+  padding-top: 28px;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-6) 0;
+}
+
+.metricCard {
+  padding: var(--space-5);
+}
+
+.metricMeta span {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: 4px;
+}
+
+.metricMeta strong {
+  display: block;
+  font-size: var(--font-size-2xl);
+}
+
+.metricIcon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-xl);
+  font-size: 1.4rem;
+}
+
+.comparisonBanner {
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.06), rgba(20, 184, 166, 0.04));
+  margin-bottom: var(--space-6);
+}
+
+.comparisonBanner strong {
+  display: block;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+}
+
+.reportLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.88fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.tableWrap {
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+  vertical-align: top;
+}
+
+.table th {
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.table td {
+  color: var(--color-text-primary);
+}
+
+.summaryList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.summaryList div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.summaryList div:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.summaryList span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.summaryList strong {
+  color: var(--color-text-primary);
+  text-align: right;
+}
+
+.emptyState {
+  text-align: center;
+  padding: var(--space-10);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-xl);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 1080px) {
+  .filterGrid,
+  .reportLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .checkboxField {
+    padding-top: 0;
+  }
+}

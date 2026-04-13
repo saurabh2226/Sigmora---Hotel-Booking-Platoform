@@ -1,0 +1,13 @@
+import api from './axiosInstance';
+export const getDashboardStats = () => api.get('/admin/dashboard');
+export const createUser = (data) => api.post('/admin/users', data);
+export const getUsers = (params) => api.get('/admin/users', { params });
+export const changeUserRole = (id, data) => api.put(`/admin/users/${id}/role`, data);
+export const changeUserStatus = (id, data) => api.put(`/admin/users/${id}/status`, data);
+export const getRevenueAnalytics = (params) => api.get('/admin/analytics/revenue', { params });
+export const getBookingAnalytics = () => api.get('/admin/analytics/bookings');
+export const getReviews = (params) => api.get('/admin/reviews', { params });
+export const getCoupons = () => api.get('/admin/coupons');
+export const createCoupon = (data) => api.post('/admin/coupons', data);
+export const updateCoupon = (id, data) => api.put(`/admin/coupons/${id}`, data);
+export const deleteCoupon = (id) => api.delete(`/admin/coupons/${id}`);

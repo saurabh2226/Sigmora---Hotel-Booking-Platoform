@@ -1,0 +1,10 @@
+import api from './axiosInstance';
+export const updatePreferences = (data) => api.put('/users/preferences', data);
+export const deleteAccount = () => api.delete('/users/account');
+export const getWishlist = () => api.get('/wishlist');
+export const toggleWishlist = (hotelId) => api.post(`/wishlist/${hotelId}`);
+export const removeFromWishlist = (hotelId) => api.delete(`/wishlist/${hotelId}`);
+export const getNotifications = (params) => api.get('/notifications', { params });
+export const markAsRead = (id) => api.put(`/notifications/${id}/read`);
+export const markAllAsRead = () => api.put('/notifications/read-all');
+export const getUnreadCount = () => api.get('/notifications/unread-count');

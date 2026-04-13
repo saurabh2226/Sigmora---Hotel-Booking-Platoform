@@ -1,0 +1,18 @@
+import api from './axiosInstance';
+export const getHotels = (params) => api.get('/hotels', { params });
+export const getFeaturedHotels = () => api.get('/hotels/featured');
+export const getPopularDestinations = () => api.get('/hotels/popular-destinations');
+export const getSearchSuggestions = (q) => api.get('/hotels/search-suggestions', { params: { q } });
+export const getHotel = (idOrSlug) => api.get(`/hotels/${idOrSlug}`);
+export const getAvailability = (id, params) => api.get(`/hotels/${id}/availability`, { params });
+export const getRecommendations = () => api.get('/hotels/recommendations');
+export const getManagedHotels = () => api.get('/hotels/manage/mine');
+export const getRoom = (hotelId, roomId) => api.get(`/hotels/${hotelId}/rooms/${roomId}`);
+export const createHotel = (data) => api.post('/hotels', data);
+export const updateHotel = (id, data) => api.put(`/hotels/${id}`, data);
+export const deleteHotel = (id) => api.delete(`/hotels/${id}`);
+export const uploadHotelImages = (id, formData) => api.post(`/hotels/${id}/images`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const getRooms = (hotelId) => api.get(`/hotels/${hotelId}/rooms`);
+export const createRoom = (hotelId, data) => api.post(`/hotels/${hotelId}/rooms`, data);
+export const updateRoom = (hotelId, roomId, data) => api.put(`/hotels/${hotelId}/rooms/${roomId}`, data);
+export const deleteRoom = (hotelId, roomId) => api.delete(`/hotels/${hotelId}/rooms/${roomId}`);
