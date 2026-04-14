@@ -11,7 +11,7 @@ export function SocketProvider({ children }) {
   const userRole = useSelector((state) => state.auth.user?.role);
 
   useEffect(() => {
-    const s = io(import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5000', {
+    const s = io(import.meta.env.VITE_API_URL?.replace('/api/v1', '') || ''https://sigmora.onrender.com', {
       auth: token ? { token } : {},
       withCredentials: true,
     });
