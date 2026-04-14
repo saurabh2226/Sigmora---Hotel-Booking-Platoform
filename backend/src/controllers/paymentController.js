@@ -329,33 +329,54 @@ const initiateRefund = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Booking not found');
   }
 
-  if (booking.payment.status !== 'completed') {
-    throw new ApiError(400, 'Payment has not been completed');
+  if (!['completed', 'partial_refunded'].includes(booking.payment.status)) {
+    throw new ApiError(400, 'Only completed or partially refunded payments can be refunded');
   }
-
-  const amount = req.body.amount || booking.refundAmount || booking.pricing.totalPrice;
 
   if (booking.payment.method !== 'razorpay') {
     throw new ApiError(400, 'Only Razorpay refunds are supported');
   }
 
-  const refundResult = await processRazorpayRefund(booking.payment.transactionId, amount);
+  const totalPaid = Number(booking.pricing?.totalPrice || 0);
+  const refundedSoFar = Number(booking.refundAmount || 0);
+  const remainingRefundable = Math.max(0, totalPaid - refundedSoFar);
 
-  booking.payment.status = amount < booking.pricing.totalPrice ? 'partial_refunded' : 'refunded';
+  if (remainingRefundable <= 0 || booking.payment.status === 'refunded') {
+    throw new ApiError(400, 'This booking has already been fully refunded');
+  }
+
+  const requestedAmount = Number(req.body.amount || remainingRefundable);
+  if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) {
+    throw new ApiError(400, 'Refund amount must be greater than zero');
+  }
+
+  if (requestedAmount > remainingRefundable) {
+    throw new ApiError(400, `Refund amount cannot exceed ${remainingRefundable}`);
+  }
+
+  const refundResult = await processRazorpayRefund(booking.payment.transactionId, requestedAmount);
+  const totalRefunded = refundedSoFar + requestedAmount;
+
+  booking.payment.status = totalRefunded < totalPaid ? 'partial_refunded' : 'refunded';
   booking.payment.refundId = refundResult.refundId;
   booking.payment.refundedAt = new Date();
-  booking.refundAmount = amount;
+  booking.refundAmount = totalRefunded;
   await booking.save();
   await syncBookingToSql(booking);
   await recordPayment({
     booking: booking._id,
     user: booking.user,
-    amount: booking.pricing.totalPrice,
+    amount: totalPaid,
     currency: 'INR',
     method: 'razorpay',
     transactionId: booking.payment.transactionId,
     status: booking.payment.status,
-    gatewayResponse: { refundResult },
+    gatewayResponse: {
+      refundResult,
+      requestedAmount,
+      totalRefunded,
+      note: req.body.note || '',
+    },
     refundId: booking.payment.refundId,
     refundedAt: booking.payment.refundedAt,
   });
@@ -363,12 +384,17 @@ const initiateRefund = asyncHandler(async (req, res) => {
   runSideEffect(async () => {
     const populatedBooking = await populateBookingEmailContext(booking);
     if (populatedBooking.user?.email) {
-      await sendRefundIssuedEmail(populatedBooking.user, populatedBooking, populatedBooking.hotel, amount);
+      await sendRefundIssuedEmail(populatedBooking.user, populatedBooking, populatedBooking.hotel, requestedAmount);
     }
   });
 
   res.status(200).json(
-    new ApiResponse(200, { refundResult, refundAmount: amount }, 'Refund initiated')
+    new ApiResponse(200, {
+      refundResult,
+      refundAmount: requestedAmount,
+      totalRefunded,
+      remainingRefundable: Math.max(0, totalPaid - totalRefunded),
+    }, 'Refund initiated')
   );
 });
 

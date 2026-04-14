@@ -5,7 +5,7 @@ import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiPhone, FiAlertCircle, FiChec
 import { registerUser } from '../redux/slices/authSlice';
 import { getGoogleAuthUrl } from '../api/authApi';
 import { getPostAuthRedirect } from '../utils/routeHelpers';
-import { isValidEmail, isValidPhone, isStrongPassword } from '../utils/validators';
+import { isValidEmail, isValidPhone, isStrongPassword, normalizePhoneInput } from '../utils/validators';
 import toast from 'react-hot-toast';
 import styles from './AuthPage.module.css';
 
@@ -37,7 +37,7 @@ export default function RegisterPage() {
         if (!isValidEmail(value)) return 'Please enter a valid email address';
         return '';
       case 'phone':
-        if (value && !isValidPhone(value)) return 'Enter a valid Indian phone number (+91XXXXXXXXXX)';
+        if (value && !isValidPhone(value)) return 'Enter a valid 10-digit Indian phone number';
         return '';
       case 'password':
         if (!value) return 'Password is required';
@@ -56,12 +56,13 @@ export default function RegisterPage() {
   }, [form.password]);
 
   const handleChange = (name, value) => {
-    setForm(prev => ({ ...prev, [name]: value }));
+    const nextValue = name === 'phone' ? normalizePhoneInput(value) : value;
+    setForm(prev => ({ ...prev, [name]: nextValue }));
     if (submitError) setSubmitError('');
-    if (touched[name]) setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+    if (touched[name]) setErrors(prev => ({ ...prev, [name]: validateField(name, nextValue) }));
     // Re-validate confirm password when password changes
     if (name === 'password' && touched.confirmPassword) {
-      setErrors(prev => ({ ...prev, confirmPassword: form.confirmPassword && form.confirmPassword !== value ? 'Passwords do not match' : '' }));
+      setErrors(prev => ({ ...prev, confirmPassword: form.confirmPassword && form.confirmPassword !== nextValue ? 'Passwords do not match' : '' }));
     }
   };
 
@@ -152,7 +153,7 @@ export default function RegisterPage() {
 
           <div className={getFieldClass('phone')}>
             <FiPhone className={styles.inputIcon} />
-            <input name="phone" type="tel" placeholder="Phone (optional)" value={form.phone} onChange={e => handleChange('phone', e.target.value)} onBlur={() => handleBlur('phone')} autoComplete="tel" />
+            <input name="phone" type="number" placeholder="Phone (optional)" value={form.phone} onChange={e => handleChange('phone', e.target.value)} onBlur={() => handleBlur('phone')} autoComplete="tel" inputMode="numeric" min="0" />
             {touched.phone && errors.phone && <span className={styles.fieldError}><FiAlertCircle size={12} /> {errors.phone}</span>}
           </div>
 

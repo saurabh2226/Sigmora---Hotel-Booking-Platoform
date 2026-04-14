@@ -175,6 +175,14 @@
 
 .reviewList { display: flex; flex-direction: column; gap: var(--space-4); }
 .reviewCard { padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+.reviewEmptyState {
+  padding: var(--space-5);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
 .reviewHeader { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
 .reviewAvatar { width: 36px; height: 36px; border-radius: var(--radius-full); background: var(--gradient-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: var(--font-size-sm); }
 .reviewHeader strong { display: block; font-size: var(--font-size-sm); color: var(--color-text-primary); }
@@ -193,6 +201,24 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+.reviewResponse {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-container-low);
+  border: 1px solid var(--color-border);
+}
+.reviewResponse strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+.reviewResponse p {
+  margin: 0;
 }
 
 .reviewActions {

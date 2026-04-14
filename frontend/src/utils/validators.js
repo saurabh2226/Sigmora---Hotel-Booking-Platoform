@@ -5,9 +5,18 @@
 export const isValidEmail = (email) =>
   /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email?.trim());
 
+export const normalizePhoneInput = (phone = '') => {
+  const digits = String(phone).replace(/\D/g, '');
+  if (digits.length > 10 && digits.startsWith('91')) {
+    return digits.slice(-10);
+  }
+
+  return digits.slice(0, 10);
+};
+
 // Indian phone number validation (+91XXXXXXXXXX or 10 digit starting with 6-9)
 export const isValidPhone = (phone) =>
-  /^(\+91)?[6-9]\d{9}$/.test(phone?.replace(/[\s-]/g, ''));
+  /^[6-9]\d{9}$/.test(normalizePhoneInput(phone));
 
 // Indian PIN code
 export const isValidPinCode = (pin) => /^[1-9][0-9]{5}$/.test(pin);

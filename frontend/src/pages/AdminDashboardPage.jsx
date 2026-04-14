@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { FiUsers, FiHome, FiCalendar, FiDollarSign, FiTrendingUp } from 'react-icons/fi';
 import { fetchDashboardStats } from '../redux/slices/adminSlice';
@@ -23,17 +22,8 @@ export default function AdminDashboardPage() {
   return (
     <div className="page container" style={{ paddingTop: 100 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-8)' }}>
-        <div><h1 style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 800 }}>Admin Dashboard</h1><p style={{ color: 'var(--color-text-muted)' }}>Overview of your platform</p></div>
-        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          <Link to="/admin/community" style={{ padding: '10px 20px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>Community</Link>
-          <Link to="/admin/reports" style={{ padding: '10px 20px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>Reports</Link>
-          <Link to="/admin/hotels" style={{ padding: '10px 20px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>Hotels</Link>
-          <Link to="/admin/users" style={{ padding: '10px 20px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>Users</Link>
-          <Link to="/admin/bookings" style={{ padding: '10px 20px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>Bookings</Link>
-          <Link to="/admin/reviews" style={{ padding: '10px 20px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>Reviews</Link>
-          <Link to="/admin/offers" style={{ padding: '10px 20px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>Offers</Link>
-          <Link to="/support" style={{ padding: '10px 20px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>Support</Link>
-        </div>
+        <div><h1 style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 800 }}>Admin Dashboard</h1><p style={{ color: 'var(--color-text-muted)' }}>Overview of your platform. Use the top navbar to jump between community, reports, hotels, users, bookings, reviews, offers, and support.</p></div>
+        <div style={{ padding: '10px 16px', borderRadius: 'var(--radius-full)', background: 'rgba(15, 118, 110, 0.08)', color: 'var(--color-primary)', fontSize: 'var(--font-size-sm)', fontWeight: 700 }}>Platform overview</div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-4)', marginBottom: 'var(--space-8)' }}>

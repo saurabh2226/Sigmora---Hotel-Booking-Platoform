@@ -260,6 +260,12 @@ const createBookingValidation = [
   body('guestDetails.phone')
     .optional({ checkFalsy: true })
     .isMobilePhone('en-IN').withMessage('Invalid phone number'),
+  body('guestDetails.checkInTime')
+    .optional({ checkFalsy: true })
+    .matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Invalid check-in time'),
+  body('guestDetails.checkOutTime')
+    .optional({ checkFalsy: true })
+    .matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Invalid check-out time'),
   body('couponCode')
     .optional({ checkFalsy: true })
     .trim()

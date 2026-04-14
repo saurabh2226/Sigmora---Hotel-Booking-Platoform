@@ -53,6 +53,21 @@ const formatLongDate = (date) => {
   });
 };
 
+const formatTime = (value) => {
+  if (!value) return 'Not specified';
+
+  const [hours, minutes] = String(value).split(':').map(Number);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+    return sanitizeText(value);
+  }
+
+  return new Intl.DateTimeFormat('en-IN', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(new Date(2000, 0, 1, hours, minutes));
+};
+
 const toStatusLabel = (status) => {
   const normalized = String(status || 'pending').replace(/-/g, ' ');
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
@@ -388,6 +403,8 @@ const buildReceiptPayload = (booking) => {
     createdAt: formatLongDate(booking?.createdAt || new Date()),
     checkIn: formatLongDate(booking?.checkIn),
     checkOut: formatLongDate(booking?.checkOut),
+    checkInTime: formatTime(booking?.guestDetails?.checkInTime),
+    checkOutTime: formatTime(booking?.guestDetails?.checkOutTime),
     numberOfNights,
     totalGuests,
     occupancy: `${adults} adult${adults !== 1 ? 's' : ''}${children ? `, ${children} child${children !== 1 ? 'ren' : ''}` : ''}`,
@@ -489,6 +506,8 @@ export const downloadBookingReceiptPdf = (booking) => {
       { label: 'Location', value: payload.location },
       { label: 'Room selected', value: `${payload.roomTitle} (${payload.roomType})` },
       { label: 'Stay dates', value: payload.stayLine },
+      { label: 'Check-in time', value: payload.checkInTime },
+      { label: 'Check-out time', value: payload.checkOutTime },
       { label: 'Guests', value: `${payload.totalGuests} guests | ${payload.occupancy}` },
     ],
   });

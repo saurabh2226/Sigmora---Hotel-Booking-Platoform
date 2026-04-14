@@ -60,6 +60,18 @@
   display: flex;
   gap: var(--space-6);
   align-items: center;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+}
+.navLinksDense {
+  gap: var(--space-4);
+  padding: 0 var(--space-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.navLinksDense::-webkit-scrollbar {
+  display: none;
 }
 .navLink {
   font-size: var(--font-size-sm);
@@ -82,6 +94,11 @@
   transition: width var(--transition-base);
 }
 .navLink:hover::after { width: 100%; }
+.navLinkCompact {
+  flex: 0 0 auto;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
 
 .actions {
   display: flex;

@@ -31,6 +31,12 @@ const clearStoredSession = () => {
   localStorage.removeItem('user');
 };
 
+const persistUserOnly = (user) => {
+  if (user) {
+    localStorage.setItem('user', JSON.stringify(user));
+  }
+};
+
 export const loginUser = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
   try {
     const { data } = await authApi.login(credentials);
@@ -54,9 +60,17 @@ export const registerUser = createAsyncThunk('auth/register', async (userData, {
 export const fetchCurrentUser = createAsyncThunk('auth/me', async (_, { rejectWithValue }) => {
   try {
     const { data } = await authApi.getMe();
-    localStorage.setItem('user', JSON.stringify(data.data.user));
+    persistUserOnly(data.data.user);
     return data.data.user;
   } catch (err) { return rejectWithValue(getApiErrorMessage(err, 'Failed to fetch user')); }
+});
+
+export const updateUserProfile = createAsyncThunk('auth/updateProfile', async (profile, { rejectWithValue }) => {
+  try {
+    const { data } = await authApi.updateProfile(profile);
+    persistUserOnly(data.data.user);
+    return data.data.user;
+  } catch (err) { return rejectWithValue(getApiErrorMessage(err, 'Failed to update profile')); }
 });
 
 export const logoutUser = createAsyncThunk('auth/logout', async () => {
@@ -140,6 +154,16 @@ const authSlice = createSlice({
         s.accessToken = null;
         s.isAuthenticated = false;
         clearStoredSession();
+      })
+      .addCase(updateUserProfile.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(updateUserProfile.fulfilled, (s, a) => {
+        s.loading = false;
+        s.user = a.payload;
+        s.error = null;
+      })
+      .addCase(updateUserProfile.rejected, (s, a) => {
+        s.loading = false;
+        s.error = a.payload;
       })
       .addCase(logoutUser.fulfilled, (s) => { s.user = null; s.accessToken = null; s.isAuthenticated = false; s.error = null; });
   },
