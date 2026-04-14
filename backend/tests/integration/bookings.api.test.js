@@ -111,7 +111,15 @@ describe('Bookings API Integration Tests', () => {
         .expect(400);
 
       expect(res.body.success).toBe(false);
-      expect(res.body.message).toContain('past');
+      expect(res.body.message).toBe('Validation failed');
+      expect(res.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: 'checkIn',
+            message: expect.stringContaining('past'),
+          }),
+        ])
+      );
     });
   });
 

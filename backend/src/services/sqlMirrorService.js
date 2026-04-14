@@ -17,6 +17,9 @@ const {
   Notification: SqlNotification,
 } = require('../models/sql');
 
+const isSqlMirrorDisabled = () => process.env.DISABLE_SQL_MIRROR === 'true'
+  || process.env.NODE_ENV === 'test';
+
 const toMongoId = (value) => {
   if (!value) return null;
   if (typeof value === 'string') return value;
@@ -58,6 +61,10 @@ const buildHotelStatus = (hotel) => {
 };
 
 const findExistingMirror = async (Model, mongoId, fallbackWhere) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   if (mongoId) {
     const byMongoId = await Model.findOne({ where: { mongoId } });
     if (byMongoId) {
@@ -78,6 +85,10 @@ const findExistingMirror = async (Model, mongoId, fallbackWhere) => {
 };
 
 const upsertMirror = async (Model, mongoId, payload, fallbackWhere) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const existing = await findExistingMirror(Model, mongoId, fallbackWhere);
   const finalPayload = cleanPayload({
     ...(mongoId ? { mongoId } : {}),
@@ -93,6 +104,10 @@ const upsertMirror = async (Model, mongoId, payload, fallbackWhere) => {
 };
 
 const ensureSqlUser = async (userLike) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const mongoId = toMongoId(userLike);
   if (!mongoId) return null;
 
@@ -108,6 +123,10 @@ const ensureSqlUser = async (userLike) => {
 };
 
 const ensureSqlHotel = async (hotelLike) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const mongoId = toMongoId(hotelLike);
   if (!mongoId) return null;
 
@@ -123,6 +142,10 @@ const ensureSqlHotel = async (hotelLike) => {
 };
 
 const ensureSqlRoom = async (roomLike) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const mongoId = toMongoId(roomLike);
   if (!mongoId) return null;
 
@@ -138,6 +161,10 @@ const ensureSqlRoom = async (roomLike) => {
 };
 
 const ensureSqlBooking = async (bookingLike) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const mongoId = toMongoId(bookingLike);
   if (!mongoId) return null;
 
@@ -153,6 +180,10 @@ const ensureSqlBooking = async (bookingLike) => {
 };
 
 const ensureSqlCoupon = async (couponLike) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const mongoId = toMongoId(couponLike);
   if (!mongoId) return null;
 
@@ -168,6 +199,10 @@ const ensureSqlCoupon = async (couponLike) => {
 };
 
 const syncUserToSql = async (userDoc) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const user = toPlain(userDoc);
   if (!user?._id) return null;
 
@@ -190,6 +225,10 @@ const syncUserToSql = async (userDoc) => {
 };
 
 const syncHotelToSql = async (hotelDoc) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const hotel = toPlain(hotelDoc);
   if (!hotel?._id) return null;
 
@@ -225,6 +264,10 @@ const syncHotelToSql = async (hotelDoc) => {
 };
 
 const syncRoomToSql = async (roomDoc) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const room = toPlain(roomDoc);
   if (!room?._id) return null;
 
@@ -249,6 +292,10 @@ const syncRoomToSql = async (roomDoc) => {
 };
 
 const syncCouponToSql = async (couponDoc) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const coupon = toPlain(couponDoc);
   if (!coupon?._id) return null;
 
@@ -282,6 +329,10 @@ const syncCouponToSql = async (couponDoc) => {
 };
 
 const syncBookingToSql = async (bookingDoc) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const booking = toPlain(bookingDoc);
   if (!booking?._id) return null;
 
@@ -340,6 +391,10 @@ const syncBookingToSql = async (bookingDoc) => {
 };
 
 const syncReviewToSql = async (reviewDoc) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const review = toPlain(reviewDoc);
   if (!review?._id) return null;
 
@@ -368,6 +423,10 @@ const syncReviewToSql = async (reviewDoc) => {
 };
 
 const syncPaymentToSql = async (paymentDoc) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const payment = toPlain(paymentDoc);
   if (!payment?._id) return null;
 
@@ -391,6 +450,10 @@ const syncPaymentToSql = async (paymentDoc) => {
 };
 
 const syncNotificationToSql = async (notificationDoc) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const notification = toPlain(notificationDoc);
   if (!notification?._id) return null;
 
@@ -409,6 +472,10 @@ const syncNotificationToSql = async (notificationDoc) => {
 };
 
 const syncNotificationsForUserToSql = async (userId) => {
+  if (isSqlMirrorDisabled()) {
+    return [];
+  }
+
   const notifications = await MongoNotification.find({ user: userId }).lean();
   const synced = [];
 
@@ -420,6 +487,10 @@ const syncNotificationsForUserToSql = async (userId) => {
 };
 
 const markReviewDeletedInSql = async (reviewId) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const mongoId = toMongoId(reviewId);
   if (!mongoId) return null;
 
@@ -431,6 +502,10 @@ const markReviewDeletedInSql = async (reviewId) => {
 };
 
 const deactivateCouponInSql = async (couponId) => {
+  if (isSqlMirrorDisabled()) {
+    return null;
+  }
+
   const mongoId = toMongoId(couponId);
   if (!mongoId) return null;
 
@@ -442,6 +517,19 @@ const deactivateCouponInSql = async (couponId) => {
 };
 
 const syncAllMongoDataToSql = async () => {
+  if (isSqlMirrorDisabled()) {
+    return {
+      users: 0,
+      hotels: 0,
+      rooms: 0,
+      coupons: 0,
+      bookings: 0,
+      reviews: 0,
+      payments: 0,
+      notifications: 0,
+    };
+  }
+
   const users = await MongoUser.find().select('+password').lean();
   for (const user of users) {
     await syncUserToSql(user);

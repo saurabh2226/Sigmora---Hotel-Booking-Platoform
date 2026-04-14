@@ -5,11 +5,16 @@ const User = require('../../src/models/User');
 
 describe('OWASP Security Coverage', () => {
   let userToken;
+  let testEmail;
+  let userSequence = 0;
 
   beforeEach(async () => {
+    userSequence += 1;
+    testEmail = `sec${userSequence}@test.com`;
+
     await User.create({
       name: 'SecUser',
-      email: 'sec@test.com',
+      email: testEmail,
       password: 'SecurePass123!',
       role: 'user',
       isVerified: true,
@@ -17,7 +22,7 @@ describe('OWASP Security Coverage', () => {
 
     const loginRes = await request(app)
       .post('/api/v1/auth/login')
-      .send({ email: 'sec@test.com', password: 'SecurePass123!' })
+      .send({ email: testEmail, password: 'SecurePass123!' })
       .expect(200);
 
     userToken = loginRes.body.data.accessToken;
@@ -52,7 +57,7 @@ describe('OWASP Security Coverage', () => {
     });
 
     it('should store passwords as bcrypt hashes', async () => {
-      const user = await User.findOne({ email: 'sec@test.com' }).select('+password');
+      const user = await User.findOne({ email: testEmail }).select('+password');
       expect(user.password).not.toBe('SecurePass123!');
       expect(user.password.startsWith('$2')).toBe(true);
     });
