@@ -56,7 +56,7 @@
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.16fr) minmax(320px, 390px);
-  gap: var(--space-7);
+  gap: clamp(var(--space-5), 3vw, var(--space-8));
   align-items: start;
 }
 
@@ -66,7 +66,7 @@
   flex-direction: column;
   gap: var(--space-6);
   background: var(--color-bg-card);
-  padding: var(--space-7);
+  padding: clamp(var(--space-5), 3vw, var(--space-7));
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-xs);
   border: 1px solid var(--color-border);
@@ -460,16 +460,15 @@
 }
 
 .summaryCard {
-  padding: var(--space-7);
+  padding: clamp(var(--space-5), 3vw, var(--space-6));
   background: var(--color-bg-card);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--color-border);
-  overflow: hidden;
 }
 
 .summaryHero {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
   padding-bottom: var(--space-5);
   border-bottom: 1px solid rgba(148, 163, 184, 0.16);
 }
@@ -504,8 +503,7 @@
   grid-template-columns: minmax(120px, 0.94fr) minmax(0, 1.06fr);
   gap: var(--space-4);
   align-items: start;
-  padding: 0 0 var(--space-3);
-  margin-bottom: var(--space-3);
+  padding: var(--space-3) 0;
   border-bottom: 1px solid rgba(148, 163, 184, 0.14);
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
@@ -694,6 +692,7 @@
 @media (max-width: 1180px) {
   .layout {
     grid-template-columns: 1fr;
+    gap: var(--space-6);
   }
 
   .summary {
@@ -708,6 +707,15 @@
 }
 
 @media (max-width: 768px) {
+  .page {
+    padding-top: calc(var(--navbar-height) + var(--space-4));
+    padding-bottom: var(--space-10);
+  }
+
+  .layout {
+    gap: var(--space-5);
+  }
+
   .formGrid,
   .introMetaGrid,
   .couponInputRow {
@@ -718,10 +726,13 @@
     width: min(220px, 72vw);
   }
 
-  .sectionCard,
+  .sectionCard {
+    padding: var(--space-4);
+  }
+
   .summaryCard,
   .formSection {
-    padding: var(--space-5);
+    padding: var(--space-4);
   }
 
   .summaryRow {
@@ -737,6 +748,27 @@
 
   .summaryValueInline {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .layout {
+    gap: var(--space-4);
+  }
+
+  .formSection,
+  .summaryCard,
+  .sectionCard {
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
+  }
+
+  .formIntro {
+    padding: var(--space-4);
+  }
+
+  .title {
+    font-size: clamp(1.5rem, 6vw, 2rem);
   }
 }
 

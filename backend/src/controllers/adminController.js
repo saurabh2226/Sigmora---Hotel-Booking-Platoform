@@ -8,10 +8,16 @@ const Coupon = require('../models/Coupon');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const asyncHandler = require('../utils/asyncHandler');
-const { sendAdminCreatedCredentialsEmail } = require('../services/emailService');
+const { sendAdminCreatedCredentialsEmail, sendUserStatusChangedEmail } = require('../services/emailService');
 const { syncUserToSql, syncCouponToSql, deactivateCouponInSql } = require('../services/sqlMirrorService');
 const { User: SqlUser, Hotel: SqlHotel, Booking: SqlBooking } = require('../models/sql');
 const { normalizeRole } = require('../middleware/roles');
+
+const runSideEffect = (task) => {
+  Promise.resolve()
+    .then(task)
+    .catch(console.error);
+};
 
 const generateTemporaryPassword = () => {
   const charsByGroup = {
@@ -244,11 +250,41 @@ const getUsers = asyncHandler(async (req, res) => {
     User.countDocuments(query),
   ]);
 
+  const userIds = users.map((user) => user._id);
+  const reviews = userIds.length > 0
+    ? await Review.find({ user: { $in: userIds } })
+      .populate('hotel', 'title')
+      .select('user hotel rating title comment createdAt')
+      .sort({ createdAt: -1 })
+      .lean()
+    : [];
+
+  const reviewsByUser = reviews.reduce((map, review) => {
+    const userId = String(review.user);
+
+    if (!map[userId]) {
+      map[userId] = {
+        reviewCount: 0,
+        recentReviews: [],
+      };
+    }
+
+    map[userId].reviewCount += 1;
+
+    if (map[userId].recentReviews.length < 2) {
+      map[userId].recentReviews.push(review);
+    }
+
+    return map;
+  }, {});
+
   res.status(200).json(
     new ApiResponse(200, {
       users: users.map((user) => ({
         ...user,
         role: normalizeRole(user.role),
+        reviewCount: reviewsByUser[String(user._id)]?.reviewCount || 0,
+        recentReviews: reviewsByUser[String(user._id)]?.recentReviews || [],
       })),
       currentPage: pageNum,
       totalPages: Math.ceil(total / limitNum),
@@ -339,6 +375,11 @@ const changeUserStatus = asyncHandler(async (req, res) => {
 
   if (!user) throw new ApiError(404, 'User not found');
   await syncUserToSql(user);
+  runSideEffect(() => sendUserStatusChangedEmail({
+    user,
+    isActive: user.isActive,
+    changedBy: req.user,
+  }));
 
   res.status(200).json(new ApiResponse(200, { user }, `User ${isActive ? 'activated' : 'deactivated'}`));
 });

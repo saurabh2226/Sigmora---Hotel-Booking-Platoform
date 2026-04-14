@@ -451,6 +451,86 @@ const sendAdminCreatedCredentialsEmail = async ({
   });
 };
 
+const sendUserStatusChangedEmail = async ({ user, isActive, changedBy }) => {
+  if (!user?.email) {
+    return null;
+  }
+
+  const changedByName = escapeHtml(changedBy?.name || 'The Sigmora admin team');
+  const title = isActive ? 'Your account has been reactivated' : 'Your account has been deactivated';
+  const bodyCopy = isActive
+    ? 'Your access has been restored. You can sign in again and continue using the platform.'
+    : 'Your access has been disabled by the admin team. If you believe this is a mistake, please contact support.';
+
+  return sendEmail({
+    to: user.email,
+    subject: `${title} - ${BRAND_NAME}`,
+    text: `Hi ${user?.name || ''}, ${bodyCopy}`,
+    html: `
+      <div style="font-family: 'Inter', sans-serif; max-width: 620px; margin: 0 auto; padding: 40px 20px;">
+        <h1 style="color: ${isActive ? '#0f766e' : '#ef4444'}; margin-bottom: 18px;">${title}</h1>
+        <p>Hi ${escapeHtml(user.name || 'there')},</p>
+        <p>${bodyCopy}</p>
+        <div style="background: #f8fafc; border-radius: 14px; padding: 18px 20px; margin: 20px 0; border: 1px solid #dbeafe;">
+          <p style="margin: 0 0 8px;"><strong>Account:</strong> ${escapeHtml(user.email)}</p>
+          <p style="margin: 0;"><strong>Updated by:</strong> ${changedByName}</p>
+        </div>
+        <a href="${getClientUrl()}/support" style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #0f766e, #14b8a6); color: white; text-decoration: none; border-radius: 10px; font-weight: 600;">Contact Support</a>
+      </div>
+    `,
+  });
+};
+
+const sendHotelDeletedOwnerEmail = async ({ owner, hotel, deletedBy }) => {
+  if (!owner?.email) {
+    return null;
+  }
+
+  return sendEmail({
+    to: owner.email,
+    subject: `Hotel removed from listings - ${hotel.title}`,
+    text: `${hotel.title} has been removed from active listings by ${deletedBy?.name || 'the admin team'}.`,
+    html: `
+      <div style="font-family: 'Inter', sans-serif; max-width: 620px; margin: 0 auto; padding: 40px 20px;">
+        <h1 style="color: #ef4444; margin-bottom: 18px;">Hotel removed from active listings</h1>
+        <p>Hi ${escapeHtml(owner.name || 'Partner')},</p>
+        <p><strong>${escapeHtml(hotel.title)}</strong> has been removed from active listings by ${escapeHtml(deletedBy?.name || 'the admin team')}.</p>
+        <div style="background: #fff7ed; border-radius: 14px; padding: 18px 20px; margin: 20px 0; border: 1px solid #fed7aa;">
+          <p style="margin: 0 0 8px;"><strong>Hotel:</strong> ${escapeHtml(hotel.title)}</p>
+          <p style="margin: 0;"><strong>Location:</strong> ${escapeHtml(hotel.address?.city || '')}${hotel.address?.state ? `, ${escapeHtml(hotel.address.state)}` : ''}</p>
+        </div>
+        <a href="${getClientUrl()}/admin/hotels" style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #0f766e, #14b8a6); color: white; text-decoration: none; border-radius: 10px; font-weight: 600;">Open Hotel Management</a>
+      </div>
+    `,
+  });
+};
+
+const sendHotelDeletedGuestEmail = async ({ guest, hotel, booking }) => {
+  if (!guest?.email) {
+    return null;
+  }
+
+  return sendEmail({
+    to: guest.email,
+    subject: `Hotel unavailable - ${hotel.title}`,
+    text: `${hotel.title} has been removed from active listings. Please review your booking and contact support if you need help.`,
+    html: `
+      <div style="font-family: 'Inter', sans-serif; max-width: 620px; margin: 0 auto; padding: 40px 20px;">
+        <h1 style="color: #ef4444; margin-bottom: 18px;">Hotel no longer available</h1>
+        <p>Hi ${escapeHtml(guest.name || 'there')},</p>
+        <p>The hotel <strong>${escapeHtml(hotel.title)}</strong> has been removed from active listings.</p>
+        <div style="background: #f8fafc; border-radius: 14px; padding: 18px 20px; margin: 20px 0; border: 1px solid #dbeafe;">
+          <p style="margin: 0 0 8px;"><strong>Hotel:</strong> ${escapeHtml(hotel.title)}</p>
+          <p style="margin: 0 0 8px;"><strong>Booking ID:</strong> ${escapeHtml(String(booking?._id || '').slice(-8).toUpperCase())}</p>
+          <p style="margin: 0;"><strong>Stay dates:</strong> ${booking?.checkIn ? toDateText(booking.checkIn) : 'TBD'}${booking?.checkOut ? ` to ${toDateText(booking.checkOut)}` : ''}</p>
+        </div>
+        <p style="color: #475569;">Please contact the support team if you need help with next steps.</p>
+        <a href="${getClientUrl()}/support" style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #0f766e, #14b8a6); color: white; text-decoration: none; border-radius: 10px; font-weight: 600;">Contact Support</a>
+      </div>
+    `,
+  });
+};
+
 const sendNewsletterSubscriptionEmail = async ({ email, name = 'traveler' }) => {
   return sendEmail({
     to: email,
@@ -488,4 +568,7 @@ module.exports = {
   sendSupportReplyEmail,
   sendAdminCreatedCredentialsEmail,
   sendNewsletterSubscriptionEmail,
+  sendUserStatusChangedEmail,
+  sendHotelDeletedOwnerEmail,
+  sendHotelDeletedGuestEmail,
 };

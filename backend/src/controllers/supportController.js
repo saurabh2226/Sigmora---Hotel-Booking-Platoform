@@ -1,5 +1,6 @@
 const Hotel = require('../models/Hotel');
 const SupportConversation = require('../models/SupportConversation');
+const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const asyncHandler = require('../utils/asyncHandler');
@@ -48,25 +49,60 @@ const ensureConversationAccess = async (conversationId, user) => {
 };
 
 const notifyConversationParticipants = async (conversation, sender, latestMessage) => {
-  const recipients = [];
+  const recipients = new Map();
+  const senderId = String(sender._id);
+  const hotelTitle = conversation.hotel?.title || 'this hotel';
 
-  if (conversation.user._id.toString() !== sender._id.toString()) {
-    recipients.push({
-      userId: conversation.user._id,
-      title: `New reply from ${sender.name}`,
-      message: latestMessage.text,
+  const addRecipient = ({ userId, title, message }) => {
+    if (!userId) {
+      return;
+    }
+
+    const normalizedId = String(userId);
+    if (!normalizedId || normalizedId === senderId) {
+      return;
+    }
+
+    recipients.set(normalizedId, {
+      userId: normalizedId,
+      title,
+      message,
+    });
+  };
+
+  addRecipient({
+    userId: conversation.user?._id,
+    title: `New reply from ${sender.name}`,
+    message: latestMessage.text,
+  });
+
+  addRecipient({
+    userId: conversation.owner?._id,
+    title: `New support message for ${hotelTitle}`,
+    message: latestMessage.text,
+  });
+
+  if (getSenderRole(sender.role) === 'user') {
+    const adminAudience = await User.find({
+      _id: { $ne: sender._id },
+      isActive: true,
+      role: { $in: ['admin', 'owner', 'superadmin'] },
+    })
+      .select('_id')
+      .lean();
+
+    adminAudience.forEach((adminUser) => {
+      addRecipient({
+        userId: adminUser._id,
+        title: `New guest query for ${hotelTitle}`,
+        message: latestMessage.text,
+      });
     });
   }
 
-  if (conversation.owner._id.toString() !== sender._id.toString()) {
-    recipients.push({
-      userId: conversation.owner._id,
-      title: `New support message for ${conversation.hotel.title}`,
-      message: latestMessage.text,
-    });
-  }
+  const recipientList = Array.from(recipients.values());
 
-  await Promise.all(recipients.map(({ userId, title, message }) => (
+  await Promise.all(recipientList.map(({ userId, title, message }) => (
     createNotification({
       userId,
       type: 'system',
@@ -77,7 +113,7 @@ const notifyConversationParticipants = async (conversation, sender, latestMessag
     })
   )));
 
-  recipients.forEach(({ userId }) => {
+  recipientList.forEach(({ userId }) => {
     emitToUser(String(userId), 'support:updated', {
       conversationId: conversation._id,
       latestMessage,

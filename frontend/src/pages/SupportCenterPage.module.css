@@ -48,7 +48,7 @@
 
 .assistantPanel {
   padding: var(--space-6);
-  margin-bottom: var(--space-6);
+  margin-top: var(--space-6);
 }
 
 .assistantHeader {
@@ -196,6 +196,54 @@
 
 .chatPanel {
   min-width: 0;
+}
+
+.assistantLauncher {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  border-radius: var(--radius-2xl);
+  border: 1px solid rgba(15, 118, 110, 0.12);
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(20, 184, 166, 0.04));
+}
+
+.assistantLauncher h2 {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xl);
+  margin-bottom: 6px;
+}
+
+.assistantLauncher p {
+  max-width: 72ch;
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.hotelSupportBadge {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--space-4);
+  padding: 12px 14px;
+  border-radius: var(--radius-xl);
+  background: rgba(15, 118, 110, 0.08);
+  border: 1px solid rgba(15, 118, 110, 0.14);
+}
+
+.hotelSupportBadge span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hotelSupportBadge strong {
+  color: var(--color-text-primary);
 }
 
 .panelCard {
@@ -378,6 +426,10 @@
 
   .sidebar {
     position: static;
+  }
+
+  .assistantLauncher {
+    align-items: flex-start;
   }
 
   .messageBubble {

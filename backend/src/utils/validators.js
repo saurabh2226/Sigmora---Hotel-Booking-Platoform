@@ -159,7 +159,7 @@ const createHotelValidation = [
     .notEmpty().withMessage('State is required')
     .trim(),
   body('address.zipCode')
-    .optional()
+    .optional({ checkFalsy: true })
     .matches(/^[1-9][0-9]{5}$/).withMessage('Invalid Indian PIN code'),
   body('address.country').optional().default('India'),
   body('pricePerNight')
@@ -197,11 +197,22 @@ const createRoomValidation = [
     .optional()
     .isInt({ min: 1, max: 500 }).withMessage('Total rooms must be 1-500'),
   body('bedType')
-    .optional()
+    .optional({ checkFalsy: true })
     .isIn(['single', 'double', 'queen', 'king', 'twin']).withMessage('Invalid bed type'),
   body('size')
-    .optional()
+    .optional({ checkFalsy: true })
     .isFloat({ min: 10, max: 10000 }).withMessage('Room size must be 10-10000 sq ft'),
+  body('roomSize')
+    .optional({ checkFalsy: true })
+    .isFloat({ min: 10, max: 10000 }).withMessage('Room size must be 10-10000 sq ft'),
+  body('amenities')
+    .optional()
+    .isArray().withMessage('Amenities must be an array'),
+  body('amenities.*')
+    .optional()
+    .isString().withMessage('Each amenity must be a string')
+    .trim()
+    .isLength({ min: 1, max: 60 }).withMessage('Each amenity must be 1-60 characters'),
 ];
 
 // ===== BOOKING VALIDATORS =====

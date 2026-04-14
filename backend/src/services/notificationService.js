@@ -1,4 +1,5 @@
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 const { emitToUser, emitToAdmins } = require('../socket/socketHandler');
 const { syncNotificationToSql } = require('./sqlMirrorService');
 
@@ -15,10 +16,15 @@ const createNotification = async ({ userId, type, title, message, link, metadata
       link,
       metadata,
     });
-    await syncNotificationToSql(notification);
+
+    try {
+      await syncNotificationToSql(notification);
+    } catch (error) {
+      console.error('Notification SQL sync error:', error.message);
+    }
 
     // Push real-time notification via Socket.IO
-    emitToUser(userId, 'notification:new', {
+    emitToUser(String(userId), 'notification:new', {
       _id: notification._id,
       type: notification.type,
       title: notification.title,
@@ -46,6 +52,24 @@ const notifyNewBooking = async (booking, user, hotel) => {
     totalPrice: booking.pricing.totalPrice,
     checkIn: booking.checkIn,
   });
+
+  const admins = await User.find({
+    role: { $in: ['admin', 'owner', 'superadmin'] },
+    isActive: true,
+  })
+    .select('_id')
+    .lean();
+
+  await Promise.all(admins.map((adminUser) => (
+    createNotification({
+      userId: adminUser._id,
+      type: 'booking',
+      title: 'New booking received',
+      message: `${user.name} booked ${hotel.title}.`,
+      link: '/admin/bookings',
+      metadata: { bookingId: booking._id, hotelId: hotel._id, userId: user._id },
+    })
+  )));
 
   // Create notification for user
   await createNotification({

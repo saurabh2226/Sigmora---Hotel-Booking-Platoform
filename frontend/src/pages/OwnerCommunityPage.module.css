@@ -40,13 +40,40 @@
   gap: var(--space-6);
 }
 
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.statCard {
+  padding: var(--space-5);
+  border-radius: var(--radius-2xl);
+  border: 1px solid rgba(15, 118, 110, 0.12);
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(255, 255, 255, 0.9));
+  box-shadow: var(--shadow-xs);
+}
+
+.statCard strong {
+  display: block;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-3xl);
+  margin-bottom: 6px;
+}
+
+.statCard span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
 .topGrid {
-  grid-template-columns: 1.05fr 0.95fr;
+  grid-template-columns: minmax(0, 1fr);
   margin-bottom: var(--space-6);
 }
 
 .layout {
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: 340px minmax(0, 1fr);
 }
 
 .panelCard,
@@ -106,8 +133,8 @@
 .stack input,
 .stack select,
 .stack textarea,
-.filterForm input,
-.filterForm select,
+.compactFilter input,
+.compactFilter select,
 .messageForm textarea {
   width: 100%;
   padding: 14px 16px;
@@ -120,16 +147,6 @@
 .stack textarea,
 .messageForm textarea {
   resize: vertical;
-}
-
-.filterForm {
-  display: flex;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.filterForm > * {
-  flex: 1 1 180px;
 }
 
 .primaryBtn,
@@ -182,6 +199,31 @@
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
   font-weight: 700;
+}
+
+.compactFilter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-container-low);
+  border: 1px solid var(--color-border);
+}
+
+.compactFilterTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.compactFilterRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(160px, 0.9fr);
+  gap: var(--space-3);
 }
 
 .threadList {
@@ -319,6 +361,7 @@
 }
 
 @media (max-width: 1080px) {
+  .statsGrid,
   .topGrid,
   .layout,
   .formGrid {
@@ -335,7 +378,7 @@
     max-width: 100%;
   }
 
-  .filterForm {
-    flex-direction: column;
+  .compactFilterRow {
+    grid-template-columns: 1fr;
   }
 }

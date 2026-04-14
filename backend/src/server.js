@@ -28,7 +28,8 @@ const startServer = async () => {
     // Connect MySQL/Sequelize
     await connectSequelize({
       syncSchema: process.env.SQL_SCHEMA_SYNC !== 'false',
-      alter: process.env.NODE_ENV !== 'production' && process.env.SQL_SCHEMA_ALTER !== 'false',
+      alter: process.env.NODE_ENV !== 'production' && process.env.SQL_SCHEMA_ALTER === 'true',
+      allowAlterFallback: true,
     });
 
     await migrateLegacyRoles();

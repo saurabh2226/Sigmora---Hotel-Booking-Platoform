@@ -6,6 +6,11 @@ import { formatDate } from '../utils/formatters';
 import Loader from '../components/common/Loader/Loader';
 import styles from './AdminWorkspace.module.css';
 
+const getReviewPreview = (review) => {
+  const source = review.title?.trim() || review.comment?.trim() || 'Guest review';
+  return source.length > 64 ? `${source.slice(0, 61)}...` : source;
+};
+
 export default function AdminUsersPage() {
   const [newUser, setNewUser] = useState({
     name: '',
@@ -245,11 +250,15 @@ export default function AdminUsersPage() {
             <strong>{users.filter((user) => user.isActive).length}</strong>
             <span>Active on this page</span>
           </div>
+          <div className={styles.metricCard}>
+            <strong>{users.filter((user) => (user.reviewCount || 0) > 0).length}</strong>
+            <span>Reviewers on this page</span>
+          </div>
         </div>
 
         {loading ? <Loader /> : (
           <div className={styles.tableWrap}>
-            <table className={styles.table}>
+            <table className={styles.table} style={{ minWidth: 980 }}>
               <thead>
                 <tr>
                   <th>User</th>
@@ -257,6 +266,7 @@ export default function AdminUsersPage() {
                   <th>Joined</th>
                   <th>Role</th>
                   <th>Status</th>
+                  <th>Reviews</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -294,6 +304,22 @@ export default function AdminUsersPage() {
                       </span>
                     </td>
                     <td>
+                      {user.reviewCount > 0 ? (
+                        <div className={styles.stack} style={{ gap: '10px' }}>
+                          <span className={styles.tag}>{user.reviewCount} review{user.reviewCount === 1 ? '' : 's'}</span>
+                          {user.recentReviews?.map((review) => (
+                            <div key={review._id} className={styles.metaText}>
+                              <strong style={{ color: 'var(--color-text-primary)' }}>{review.hotel?.title || 'Hotel'}</strong>
+                              <div>{review.rating}/5 • {getReviewPreview(review)}</div>
+                              <div>{formatDate(review.createdAt)}</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className={styles.metaText}>No reviews yet</span>
+                      )}
+                    </td>
+                    <td>
                       <button
                         type="button"
                         className={user.isActive ? styles.dangerBtn : styles.primaryBtn}
@@ -307,7 +333,7 @@ export default function AdminUsersPage() {
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan="6">
+                    <td colSpan="7">
                       <div className={styles.emptyState}>No users found for this filter set.</div>
                     </td>
                   </tr>

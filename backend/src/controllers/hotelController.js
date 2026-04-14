@@ -1,5 +1,7 @@
 const Hotel = require('../models/Hotel');
 const Room = require('../models/Room');
+const Booking = require('../models/Booking');
+const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const asyncHandler = require('../utils/asyncHandler');
@@ -9,6 +11,63 @@ const { isAdminRole } = require('../middleware/roles');
 const { attachOffersToHotels } = require('../utils/offerUtils');
 const { emitHotelCatalogUpdate, emitHotelDetailUpdate } = require('../socket/socketHandler');
 const { syncHotelToSql } = require('../services/sqlMirrorService');
+const { createNotification } = require('../services/notificationService');
+const { sendHotelDeletedOwnerEmail, sendHotelDeletedGuestEmail } = require('../services/emailService');
+
+const runSideEffect = (task) => {
+  Promise.resolve()
+    .then(task)
+    .catch(console.error);
+};
+
+const uploadImageToCloudinary = (file) => new Promise((resolve, reject) => {
+  let settled = false;
+
+  const fail = (error) => {
+    if (settled) {
+      return;
+    }
+    settled = true;
+    reject(error instanceof ApiError ? error : new ApiError(502, error.message || 'Failed to upload hotel image'));
+  };
+
+  const succeed = (result) => {
+    if (settled) {
+      return;
+    }
+    settled = true;
+    resolve({ url: result.secure_url, publicId: result.public_id });
+  };
+
+  try {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'hotel-booking/hotels', transformation: { width: 1200, crop: 'limit' } },
+      (error, result) => {
+        if (error) {
+          fail(new ApiError(502, error.message || 'Failed to upload hotel image'));
+          return;
+        }
+
+        if (!result?.secure_url || !result?.public_id) {
+          fail(new ApiError(502, 'Image service did not return a valid upload response'));
+          return;
+        }
+
+        succeed(result);
+      }
+    );
+
+    if (typeof stream.on === 'function') {
+      stream.on('error', (error) => {
+        fail(new ApiError(502, error.message || 'Failed to upload hotel image'));
+      });
+    }
+
+    stream.end(file.buffer);
+  } catch (error) {
+    fail(new ApiError(502, error.message || 'Failed to upload hotel image'));
+  }
+});
 
 const escapeRegex = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -250,8 +309,33 @@ const getManagedHotels = asyncHandler(async (req, res) => {
     .lean();
 
   const hotelsWithOffers = await attachOffersToHotels(hotels);
+  const hotelIds = hotelsWithOffers.map((hotel) => hotel._id);
+  const rooms = hotelIds.length > 0
+    ? await Room.find({ hotel: { $in: hotelIds }, isActive: true })
+      .select('hotel title type totalRooms maxGuests pricePerNight roomSize')
+      .sort({ createdAt: -1 })
+      .lean()
+    : [];
 
-  res.status(200).json(new ApiResponse(200, { hotels: hotelsWithOffers }));
+  const roomsByHotelId = rooms.reduce((map, room) => {
+    const hotelId = String(room.hotel);
+    if (!map[hotelId]) {
+      map[hotelId] = [];
+    }
+    map[hotelId].push(room);
+    return map;
+  }, {});
+
+  const hotelsWithRoomPreview = hotelsWithOffers.map((hotel) => {
+    const activeRooms = roomsByHotelId[String(hotel._id)] || [];
+    return {
+      ...hotel,
+      roomCount: activeRooms.length,
+      roomsPreview: activeRooms.slice(0, 3),
+    };
+  });
+
+  res.status(200).json(new ApiResponse(200, { hotels: hotelsWithRoomPreview }));
 });
 
 // @desc    Update hotel
@@ -292,6 +376,60 @@ const deleteHotel = asyncHandler(async (req, res) => {
   emitHotelCatalogUpdate({ action: 'deleted', hotelId: hotel._id });
   emitHotelDetailUpdate(hotel._id, { action: 'deleted' });
 
+  const [owner, activeBookings] = await Promise.all([
+    hotel.createdBy ? User.findById(hotel.createdBy).select('name email') : null,
+    Booking.find({
+      hotel: hotel._id,
+      status: { $ne: 'cancelled' },
+    })
+      .populate('user', 'name email')
+      .lean(),
+  ]);
+
+  if (owner?._id) {
+    runSideEffect(() => createNotification({
+      userId: owner._id,
+      type: 'system',
+      title: 'Hotel removed from listings',
+      message: `${hotel.title} was removed from active listings.`,
+      link: '/admin/hotels',
+      metadata: { hotelId: hotel._id },
+    }));
+    runSideEffect(() => sendHotelDeletedOwnerEmail({
+      owner,
+      hotel,
+      deletedBy: req.user,
+    }));
+  }
+
+  const notifiedGuestIds = new Set();
+  activeBookings.forEach((booking) => {
+    const guest = booking.user;
+    if (!guest?._id) {
+      return;
+    }
+
+    const guestId = String(guest._id);
+    if (notifiedGuestIds.has(guestId)) {
+      return;
+    }
+    notifiedGuestIds.add(guestId);
+
+    runSideEffect(() => createNotification({
+      userId: guest._id,
+      type: 'system',
+      title: 'Hotel no longer available',
+      message: `${hotel.title} has been removed from active listings.`,
+      link: '/dashboard',
+      metadata: { hotelId: hotel._id, bookingId: booking._id },
+    }));
+    runSideEffect(() => sendHotelDeletedGuestEmail({
+      guest,
+      hotel,
+      booking,
+    }));
+  });
+
   res.status(200).json(
     new ApiResponse(200, null, 'Hotel deleted successfully')
   );
@@ -310,21 +448,12 @@ const uploadImages = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'No images provided');
   }
 
-  const uploadPromises = req.files.map((file) =>
-    new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder: 'hotel-booking/hotels', transformation: { width: 1200, crop: 'limit' } },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve({ url: result.secure_url, publicId: result.public_id });
-        }
-      );
-      stream.end(file.buffer);
-    })
-  );
+  if (typeof cloudinary.isConfigured === 'function' && !cloudinary.isConfigured()) {
+    throw new ApiError(503, cloudinary.getConfigError?.() || 'Hotel image uploads are temporarily unavailable.');
+  }
 
-  const uploadedImages = await Promise.all(uploadPromises);
-  hotel.images.push(...uploadedImages);
+  const uploadedImages = await Promise.all(req.files.map((file) => uploadImageToCloudinary(file)));
+  hotel.images = [...uploadedImages, ...hotel.images];
   await hotel.save();
   await syncHotelToSql(hotel);
   emitHotelCatalogUpdate({ action: 'images-updated', hotelId: hotel._id });
@@ -350,8 +479,12 @@ const deleteImage = asyncHandler(async (req, res) => {
   }
 
   // Delete from Cloudinary
-  if (image.publicId) {
-    await cloudinary.uploader.destroy(image.publicId);
+  if (image.publicId && typeof cloudinary.isConfigured === 'function' && cloudinary.isConfigured()) {
+    try {
+      await cloudinary.uploader.destroy(image.publicId);
+    } catch (error) {
+      console.error('Cloudinary delete error:', error.message);
+    }
   }
 
   hotel.images.pull(req.params.imageId);

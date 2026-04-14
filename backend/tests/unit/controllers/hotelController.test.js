@@ -1,6 +1,8 @@
 // Mock dependencies
 jest.mock('../../../src/models/Hotel');
 jest.mock('../../../src/models/Room');
+jest.mock('../../../src/models/Booking');
+jest.mock('../../../src/models/User');
 jest.mock('../../../src/services/availabilityService');
 jest.mock('../../../src/config/cloudinary');
 jest.mock('../../../src/utils/offerUtils', () => ({
@@ -13,9 +15,17 @@ jest.mock('../../../src/socket/socketHandler', () => ({
 jest.mock('../../../src/services/sqlMirrorService', () => ({
   syncHotelToSql: jest.fn().mockResolvedValue(null),
 }));
+jest.mock('../../../src/services/notificationService', () => ({
+  createNotification: jest.fn().mockResolvedValue(null),
+}));
+jest.mock('../../../src/services/emailService', () => ({
+  sendHotelDeletedOwnerEmail: jest.fn().mockResolvedValue(null),
+  sendHotelDeletedGuestEmail: jest.fn().mockResolvedValue(null),
+}));
 
 const Hotel = require('../../../src/models/Hotel');
 const Room = require('../../../src/models/Room');
+const Booking = require('../../../src/models/Booking');
 
 const {
   getHotels, getFeaturedHotels, getHotel, createHotel, updateHotel, deleteHotel,
@@ -235,8 +245,18 @@ describe('HotelController', () => {
 
   describe('deleteHotel', () => {
     it('should soft-delete hotel by setting isActive to false', async () => {
-      const mockHotel = { _id: 'h1', isActive: true, save: jest.fn().mockResolvedValue(true) };
+      const mockHotel = {
+        _id: 'h1',
+        title: 'Delete Me',
+        isActive: true,
+        save: jest.fn().mockResolvedValue(true),
+      };
       Hotel.findById.mockResolvedValue(mockHotel);
+      Booking.find.mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          lean: jest.fn().mockResolvedValue([]),
+        }),
+      });
 
       const { req, res, next } = createMocks({}, { id: 'h1' });
 

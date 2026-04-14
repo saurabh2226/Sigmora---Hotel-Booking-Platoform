@@ -37,10 +37,10 @@ module.exports = defineConfig({
   ],
   webServer: [
     {
-      command: 'node mock-backend.js',
-      url: 'http://127.0.0.1:5000/api/health',
+      command: 'cd ../backend && npm run dev',
+      url: 'http://localhost:5000/api/health',
       reuseExistingServer: !process.env.CI,
-      timeout: 30 * 1000,
+      timeout: 120 * 1000,
     },
     {
       command: 'cd ../frontend && npm run dev -- --host 127.0.0.1 --port 4173 --strictPort',

@@ -25,12 +25,14 @@
   font-weight: 800;
   color: var(--color-text-primary);
   margin-bottom: var(--space-2);
+  overflow-wrap: anywhere;
 }
 
 .heroCopy p {
   color: var(--color-text-muted);
   max-width: 62ch;
   line-height: 1.75;
+  overflow-wrap: anywhere;
 }
 
 .heroActions {
@@ -80,6 +82,7 @@
 
 .propertyBody {
   padding: var(--space-6);
+  min-width: 0;
 }
 
 .propertyMetaRow {
@@ -110,6 +113,7 @@
   color: var(--color-text-primary);
   font-size: var(--font-size-2xl);
   margin-bottom: var(--space-3);
+  overflow-wrap: anywhere;
 }
 
 .locationLine {
@@ -193,6 +197,7 @@
   font-size: var(--font-size-sm);
   text-align: right;
   word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .guestGrid {
@@ -220,6 +225,7 @@
   display: block;
   color: var(--color-text-primary);
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .noteBox {
@@ -242,6 +248,7 @@
 .noteBox p {
   color: var(--color-text-primary);
   line-height: 1.75;
+  overflow-wrap: anywhere;
 }
 
 .totalRow {
@@ -283,6 +290,12 @@
   flex-wrap: wrap;
 }
 
+.heroActions > *,
+.actionStack > *,
+.inlineActions > * {
+  flex: 1 1 220px;
+}
+
 .helperText {
   margin-top: var(--space-4);
   color: var(--color-text-muted);
@@ -301,6 +314,8 @@
   padding: 0 20px;
   border-radius: 16px;
   font-weight: 700;
+  text-align: center;
+  line-height: 1.4;
 }
 
 .primaryBtn:disabled,
@@ -360,6 +375,12 @@
   .detailRow strong,
   .totalRow strong {
     text-align: left;
+  }
+
+  .heroActions > *,
+  .actionStack > *,
+  .inlineActions > * {
+    flex-basis: 100%;
   }
 
   .sidebar {

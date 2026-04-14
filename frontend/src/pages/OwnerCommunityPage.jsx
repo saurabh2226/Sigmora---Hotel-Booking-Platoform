@@ -96,6 +96,15 @@ export default function OwnerCommunityPage() {
     [threads, selectedId]
   );
 
+  const summaryCards = useMemo(() => {
+    const replyCount = threads.reduce((total, thread) => total + (thread.replyCount || 0), 0);
+    return [
+      { label: 'Active threads', value: threads.length },
+      { label: 'Categories live', value: new Set(threads.map((thread) => thread.category)).size || categories.length || Object.keys(CATEGORY_LABELS).length },
+      { label: 'Replies shared', value: replyCount },
+    ];
+  }, [threads, categories]);
+
   const handleSearchSubmit = async (event) => {
     event.preventDefault();
     await loadThreads();
@@ -172,6 +181,15 @@ export default function OwnerCommunityPage() {
         </div>
       </div>
 
+      <div className={styles.statsGrid}>
+        {summaryCards.map((card) => (
+          <div key={card.label} className={styles.statCard}>
+            <strong>{card.value}</strong>
+            <span>{card.label}</span>
+          </div>
+        ))}
+      </div>
+
       <div className={styles.topGrid}>
         <div className={styles.panelCard}>
           <div className={styles.sectionHeader}>
@@ -214,30 +232,6 @@ export default function OwnerCommunityPage() {
             </button>
           </form>
         </div>
-
-        <div className={styles.panelCard}>
-          <div className={styles.sectionHeader}>
-            <h2><FiFilter size={18} /> Filter discussions</h2>
-            <p>Focus on the category you need right now and quickly jump into a relevant thread.</p>
-          </div>
-          <form className={styles.filterForm} onSubmit={handleSearchSubmit}>
-            <input
-              value={filters.search}
-              onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
-              placeholder="Search by title or topic"
-            />
-            <select
-              value={filters.category}
-              onChange={(event) => setFilters((current) => ({ ...current, category: event.target.value }))}
-            >
-              <option value="all">All categories</option>
-              {(categories.length ? categories : Object.keys(CATEGORY_LABELS)).map((category) => (
-                <option key={category} value={category}>{CATEGORY_LABELS[category] || category}</option>
-              ))}
-            </select>
-            <button type="submit" className={styles.secondaryBtn}>Apply</button>
-          </form>
-        </div>
       </div>
 
       <div className={styles.layout}>
@@ -246,6 +240,29 @@ export default function OwnerCommunityPage() {
             <h2>Community threads</h2>
             <span>{threads.length}</span>
           </div>
+          <form className={styles.compactFilter} onSubmit={handleSearchSubmit}>
+            <div className={styles.compactFilterTitle}>
+              <FiFilter size={15} />
+              <strong>Filter threads</strong>
+            </div>
+            <div className={styles.compactFilterRow}>
+              <input
+                value={filters.search}
+                onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
+                placeholder="Search title or topic"
+              />
+              <select
+                value={filters.category}
+                onChange={(event) => setFilters((current) => ({ ...current, category: event.target.value }))}
+              >
+                <option value="all">All categories</option>
+                {(categories.length ? categories : Object.keys(CATEGORY_LABELS)).map((category) => (
+                  <option key={category} value={category}>{CATEGORY_LABELS[category] || category}</option>
+                ))}
+              </select>
+            </div>
+            <button type="submit" className={styles.secondaryBtn}>Apply filters</button>
+          </form>
 
           {threads.length === 0 ? (
             <div className={styles.emptyState}>

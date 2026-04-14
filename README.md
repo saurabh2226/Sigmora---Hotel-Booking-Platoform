@@ -83,7 +83,7 @@ MYSQL_USER=root
 MYSQL_PASSWORD=
 MYSQL_DATABASE=Sigmora_db
 SQL_SCHEMA_SYNC=true
-SQL_SCHEMA_ALTER=true
+SQL_SCHEMA_ALTER=false
 
 JWT_ACCESS_SECRET=replace_with_secure_access_secret
 JWT_REFRESH_SECRET=replace_with_secure_refresh_secret
@@ -149,6 +149,8 @@ cd backend
 npm run db:sync:sql
 npm run seed:sql
 ```
+
+Keep `SQL_SCHEMA_ALTER=false` for normal backend startup. Turn it on only when you intentionally want Sequelize to attempt in-place schema changes, since MySQL foreign-key alters are brittle on existing tables.
 
 ### 4. Start backend
 

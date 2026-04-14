@@ -36,6 +36,8 @@ const EMPTY_FORM = {
   roomAmenitiesInput: '',
 };
 
+const HOTELS_PAGE_SIZE = 6;
+
 const toHotelPayload = (form) => {
   const coordinates = {};
   if (form.latitude !== '') coordinates.lat = Number(form.latitude);
@@ -46,11 +48,11 @@ const toHotelPayload = (form) => {
     description: form.description.trim(),
     type: form.type,
     address: {
-      street: form.street.trim(),
+      ...(form.street.trim() ? { street: form.street.trim() } : {}),
       city: form.city.trim(),
       state: form.state.trim(),
-      country: form.country.trim() || 'India',
-      zipCode: form.zipCode.trim(),
+      ...(form.country.trim() ? { country: form.country.trim() } : {}),
+      ...(form.zipCode.trim() ? { zipCode: form.zipCode.trim() } : {}),
       ...(Object.keys(coordinates).length > 0 ? { coordinates } : {}),
     },
     pricePerNight: Number(form.pricePerNight),
@@ -68,7 +70,7 @@ const toStarterRoomPayload = (form) => ({
   maxGuests: Number(form.roomMaxGuests || form.maxGuests),
   totalRooms: Number(form.roomTotalRooms || form.totalRooms),
   bedType: form.roomBedType,
-  roomSize: form.roomSize ? Number(form.roomSize) : undefined,
+  ...(form.roomSize ? { roomSize: Number(form.roomSize) } : {}),
   amenities: form.roomAmenitiesInput
     .split(',')
     .map((value) => value.trim())
@@ -96,12 +98,56 @@ const mapHotelToForm = (hotel) => ({
   createStarterRoom: false,
 });
 
+const validateRoomDraft = (form, { allowGeneratedTitle = false } = {}) => {
+  const resolvedTitle = form.roomTitle.trim() || (allowGeneratedTitle ? `${form.title.trim()} Standard Room` : '');
+  const roomPrice = Number(form.roomPricePerNight || form.pricePerNight);
+  const roomGuests = Number(form.roomMaxGuests || form.maxGuests);
+  const roomInventory = Number(form.roomTotalRooms || form.totalRooms);
+  const roomSize = form.roomSize ? Number(form.roomSize) : null;
+
+  if (!resolvedTitle || resolvedTitle.length < 2) {
+    return 'Add a room title with at least 2 characters.';
+  }
+
+  if (!Number.isFinite(roomPrice) || roomPrice < 100) {
+    return 'Room price must be at least ₹100.';
+  }
+
+  if (!Number.isInteger(roomGuests) || roomGuests < 1 || roomGuests > 20) {
+    return 'Room max guests must be between 1 and 20.';
+  }
+
+  if (!Number.isInteger(roomInventory) || roomInventory < 1 || roomInventory > 500) {
+    return 'Room inventory must be between 1 and 500.';
+  }
+
+  if (roomSize !== null && (!Number.isFinite(roomSize) || roomSize < 50 || roomSize > 10000)) {
+    return 'Room size must be between 50 and 10,000 sq ft.';
+  }
+
+  return '';
+};
+
 export default function AdminHotelsPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [hotels, setHotels] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [hotelPage, setHotelPage] = useState(1);
+  const [pendingImages, setPendingImages] = useState([]);
+  const editingHotel = useMemo(
+    () => hotels.find((hotel) => hotel._id === form.id) || null,
+    [hotels, form.id]
+  );
+  const pendingImagePreviews = useMemo(
+    () => pendingImages.map((file, index) => ({
+      id: `${file.name}-${file.lastModified}-${index}`,
+      name: file.name,
+      url: URL.createObjectURL(file),
+    })),
+    [pendingImages]
+  );
 
   const loadHotels = async () => {
     try {
@@ -128,10 +174,35 @@ export default function AdminHotelsPage() {
         hotel.type,
         hotel.address?.city,
         hotel.address?.state,
+        ...(hotel.roomsPreview || []).map((room) => room.title),
       ].filter(Boolean).join(' ').toLowerCase();
       return haystack.includes(query);
     });
   }, [hotels, search]);
+
+  const hotelTotalPages = Math.max(1, Math.ceil(filteredHotels.length / HOTELS_PAGE_SIZE));
+  const paginatedHotels = useMemo(() => {
+    const start = (hotelPage - 1) * HOTELS_PAGE_SIZE;
+    return filteredHotels.slice(start, start + HOTELS_PAGE_SIZE);
+  }, [filteredHotels, hotelPage]);
+
+  useEffect(() => {
+    setHotelPage(1);
+  }, [search]);
+
+  useEffect(() => {
+    setHotelPage((current) => Math.min(current, hotelTotalPages));
+  }, [hotelTotalPages]);
+
+  useEffect(() => () => {
+    pendingImagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
+  }, [pendingImagePreviews]);
+
+  const hotelPageNumbers = useMemo(() => {
+    const start = Math.max(1, hotelPage - 2);
+    const end = Math.min(hotelTotalPages, hotelPage + 2);
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  }, [hotelPage, hotelTotalPages]);
 
   const handleAmenityToggle = (amenity) => {
     setForm((current) => ({
@@ -144,11 +215,13 @@ export default function AdminHotelsPage() {
 
   const handleEdit = (hotel) => {
     setForm(mapHotelToForm(hotel));
+    setPendingImages([]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleReset = () => {
     setForm(EMPTY_FORM);
+    setPendingImages([]);
   };
 
   const handleDelete = async (hotelId) => {
@@ -158,6 +231,7 @@ export default function AdminHotelsPage() {
       await hotelApi.deleteHotel(hotelId);
       toast.success('Hotel removed from active listings');
       await loadHotels();
+      setHotelPage(1);
       if (form.id === hotelId) {
         handleReset();
       }
@@ -180,9 +254,29 @@ export default function AdminHotelsPage() {
     }));
   };
 
+  const handleImageSelection = (event) => {
+    setPendingImages(Array.from(event.target.files || []));
+  };
+
+  const uploadSelectedImages = async (hotelId) => {
+    if (!pendingImages.length) {
+      return;
+    }
+
+    const formData = new FormData();
+    pendingImages.forEach((file) => formData.append('images', file));
+    await hotelApi.uploadHotelImages(hotelId, formData);
+  };
+
   const handleAddRoomToHotel = async () => {
     if (!form.id) {
       toast.error('Save the hotel first before adding rooms');
+      return;
+    }
+
+    const roomValidationMessage = validateRoomDraft(form);
+    if (roomValidationMessage) {
+      toast.error(roomValidationMessage);
       return;
     }
 
@@ -202,35 +296,57 @@ export default function AdminHotelsPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (!form.id && form.createStarterRoom) {
+      const roomValidationMessage = validateRoomDraft(form, { allowGeneratedTitle: true });
+      if (roomValidationMessage) {
+        toast.error(roomValidationMessage);
+        return;
+      }
+    }
+
     try {
       setSaving(true);
       const payload = toHotelPayload(form);
       let hotelId = form.id;
+      const warnings = [];
 
       if (form.id) {
         await hotelApi.updateHotel(form.id, payload);
-        toast.success('Hotel updated successfully');
       } else {
         const { data } = await hotelApi.createHotel(payload);
         hotelId = data.data.hotel._id;
-        if (form.createStarterRoom) {
-          await hotelApi.createRoom(hotelId, toStarterRoomPayload(form));
+      }
+
+      if (hotelId && pendingImages.length > 0) {
+        try {
+          await uploadSelectedImages(hotelId);
+        } catch (error) {
+          warnings.push(error.response?.data?.message || 'Images could not be uploaded right now.');
         }
-        toast.success('Hotel created successfully');
+      }
+
+      if (!form.id && form.createStarterRoom) {
+        try {
+          await hotelApi.createRoom(hotelId, toStarterRoomPayload(form));
+        } catch (error) {
+          warnings.push(error.response?.data?.message || 'Starter room could not be created.');
+        }
       }
 
       await loadHotels();
+      setHotelPage(1);
       handleReset();
-
-      if (!form.id && !hotelId) {
-        toast.success('Create a room inventory next to make it bookable');
-      }
+      toast.success(form.id ? 'Hotel updated successfully' : 'Hotel created successfully');
+      warnings.forEach((warning) => toast.error(warning));
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to save hotel');
     } finally {
       setSaving(false);
     }
   };
+
+  const visibleHotelStart = filteredHotels.length === 0 ? 0 : ((hotelPage - 1) * HOTELS_PAGE_SIZE) + 1;
+  const visibleHotelEnd = Math.min(hotelPage * HOTELS_PAGE_SIZE, filteredHotels.length);
 
   return (
     <div className={`page container ${styles.page}`}>
@@ -245,8 +361,35 @@ export default function AdminHotelsPage() {
         </div>
       </div>
 
-      <div className={styles.gridTwo}>
-        <section className={styles.panel}>
+      <div className={styles.cardGrid} style={{ marginBottom: 'var(--space-6)' }}>
+        <div className={styles.metricCard}>
+          <strong>{hotels.length}</strong>
+          <span>Active hotels</span>
+        </div>
+        <div className={styles.metricCard}>
+          <strong>{hotels.filter((hotel) => hotel.isFeatured).length}</strong>
+          <span>Featured listings</span>
+        </div>
+        <div className={styles.metricCard}>
+          <strong>{formatCurrency(hotels.reduce((sum, hotel) => sum + (hotel.pricePerNight || 0), 0) / Math.max(hotels.length, 1))}</strong>
+          <span>Average nightly price</span>
+        </div>
+      </div>
+
+      <section className={`${styles.panel} ${styles.centeredPanel}`} style={{ marginBottom: 'var(--space-6)' }}>
+        <div className={styles.panelIntro}>
+          <div>
+            <h2>{form.id ? 'Edit Hotel & Gallery' : 'Add A New Hotel'}</h2>
+            <p>Keep the hotel form centered for quick editing, then review every live listing in the paginated gallery below.</p>
+          </div>
+          {form.id && (
+            <span className={styles.pill} style={{ background: 'rgba(99,102,241,0.12)', color: '#6366f1' }}>
+              Editing {editingHotel?.title || form.title}
+            </span>
+          )}
+        </div>
+
+        <section className={styles.formShell}>
           <form className={styles.stack} onSubmit={handleSubmit}>
             <div>
               <label className={styles.label}>Hotel Title</label>
@@ -304,6 +447,39 @@ export default function AdminHotelsPage() {
             <div>
               <label className={styles.label}>Description</label>
               <textarea className={styles.textarea} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe the vibe, location, and guest experience..." required />
+            </div>
+
+            <div>
+              <label className={styles.label}>{form.id ? 'Add Hotel Images' : 'Hotel Images'}</label>
+              <input className={styles.input} type="file" accept="image/*" multiple onChange={handleImageSelection} />
+              <p className={styles.hint}>
+                {pendingImages.length > 0
+                  ? `${pendingImages.length} image${pendingImages.length === 1 ? '' : 's'} selected. The first selected image becomes the cover shown to guests.`
+                  : 'Select up to 10 images. You can upload multiple images, and the first one will be used as the hotel cover.'}
+              </p>
+              {pendingImagePreviews.length > 0 && (
+                <div className={styles.imagePreviewGrid}>
+                  {pendingImagePreviews.map((preview, index) => (
+                    <figure key={preview.id} className={styles.imagePreviewCard}>
+                      <img src={preview.url} alt={preview.name} />
+                      <figcaption>{index === 0 ? 'Cover image' : 'Gallery image'}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+              )}
+              {form.id && editingHotel?.images?.length > 0 && (
+                <div className={styles.existingGalleryBlock}>
+                  <div className={styles.metaText}>Current gallery</div>
+                  <div className={styles.imagePreviewGrid}>
+                    {editingHotel.images.slice(0, 6).map((image, index) => (
+                      <figure key={image._id || image.publicId || image.url} className={styles.imagePreviewCard}>
+                        <img src={image.url} alt={`${editingHotel.title} ${index + 1}`} />
+                        <figcaption>{index === 0 ? 'Current cover' : 'Live image'}</figcaption>
+                      </figure>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -423,41 +599,40 @@ export default function AdminHotelsPage() {
             </div>
           </form>
         </section>
+      </section>
 
-        <section className={styles.stack}>
-          <div className={styles.panel}>
-            <div className={styles.toolbar}>
-              <input className={styles.input} value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by hotel, city, or type" />
-            </div>
-            <div className={styles.cardGrid}>
-              <div className={styles.metricCard}>
-                <strong>{hotels.length}</strong>
-                <span>Active hotels</span>
-              </div>
-              <div className={styles.metricCard}>
-                <strong>{hotels.filter((hotel) => hotel.isFeatured).length}</strong>
-                <span>Featured listings</span>
-              </div>
-              <div className={styles.metricCard}>
-                <strong>{formatCurrency(hotels.reduce((sum, hotel) => sum + (hotel.pricePerNight || 0), 0) / Math.max(hotels.length, 1))}</strong>
-                <span>Average nightly price</span>
-              </div>
-            </div>
+      <section className={`${styles.panel} ${styles.hotelCollectionPanel}`}>
+        <div className={styles.hotelListHeader}>
+          <div>
+            <h2>Hotels In Your Portfolio</h2>
+            <p>Browse live properties, check room coverage, and jump into edits without leaving the page.</p>
           </div>
+          <div className={styles.hotelListSearch}>
+            <input className={styles.input} value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by hotel, city, type, or room title" />
+            <span className={styles.metaText}>
+              Showing {visibleHotelStart}-{visibleHotelEnd} of {filteredHotels.length}
+            </span>
+          </div>
+        </div>
 
-          <div className={styles.stack}>
-            {loading ? <Loader /> : filteredHotels.length === 0 ? (
-              <div className={styles.emptyState}>No hotels match your current search.</div>
-            ) : filteredHotels.map((hotel) => (
-              <article key={hotel._id} className={styles.hotelCard}>
-                <div style={{ display: 'flex', gap: 'var(--space-4)', alignItems: 'flex-start' }}>
-                  <img
-                    src={getImageUrl(hotel.images)}
-                    alt={hotel.title}
-                    style={{ width: 96, height: 96, borderRadius: 'var(--radius-lg)', objectFit: 'cover' }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+        {loading ? <Loader /> : filteredHotels.length === 0 ? (
+          <div className={styles.emptyState}>No hotels match your current search.</div>
+        ) : (
+          <>
+            <div className={styles.hotelCardGrid}>
+              {paginatedHotels.map((hotel) => (
+                <article key={hotel._id} className={`${styles.hotelCard} ${styles.hotelListingCard}`}>
+                  <div className={styles.hotelVisual}>
+                    <img
+                      src={getImageUrl(hotel.images)}
+                      alt={hotel.title}
+                    />
+                    <span className={styles.hotelImageCounter}>
+                      {hotel.images?.length || 0} photo{hotel.images?.length === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                  <div className={styles.hotelCardBody}>
+                    <div className={styles.hotelCardTop}>
                       <div>
                         <h3>{hotel.title}</h3>
                         <p className={styles.metaText}>{hotel.address?.city}, {hotel.address?.state}</p>
@@ -469,19 +644,76 @@ export default function AdminHotelsPage() {
                     <div className={styles.tagRow}>
                       <span className={styles.tag}>{formatCurrency(hotel.pricePerNight)} / night</span>
                       <span className={styles.tag}>{hotel.totalRooms} rooms</span>
+                      <span className={styles.tag}>{hotel.roomCount || 0} room types</span>
                       <span className={styles.tag}>Rating {hotel.rating?.toFixed(1) || '0.0'}</span>
                     </div>
+                    {hotel.images?.length > 1 && (
+                      <div className={styles.hotelGalleryStrip}>
+                        {hotel.images.slice(0, 3).map((image, index) => (
+                          <div key={image._id || image.publicId || `${image.url}-${index}`} className={styles.hotelGalleryThumb}>
+                            <img src={image.url} alt={`${hotel.title} ${index + 1}`} />
+                          </div>
+                        ))}
+                        {hotel.images.length > 3 && (
+                          <div className={styles.hotelGalleryMore}>+{hotel.images.length - 3}</div>
+                        )}
+                      </div>
+                    )}
+                    {hotel.roomsPreview?.length > 0 && (
+                      <div className={styles.roomPreviewList}>
+                        {hotel.roomsPreview.map((room) => (
+                          <div key={room._id} className={styles.roomPreviewItem}>
+                            <strong>{room.title}</strong>
+                            <span>{room.type} · {room.totalRooms} keys · {room.maxGuests} guests · {formatCurrency(room.pricePerNight)}</span>
+                          </div>
+                        ))}
+                        {hotel.roomCount > hotel.roomsPreview.length && (
+                          <div className={styles.metaText}>+ {hotel.roomCount - hotel.roomsPreview.length} more room type{hotel.roomCount - hotel.roomsPreview.length === 1 ? '' : 's'}</div>
+                        )}
+                      </div>
+                    )}
                     <div className={styles.inlineActions} style={{ marginTop: 'var(--space-4)' }}>
                       <button type="button" className={styles.primaryBtn} onClick={() => handleEdit(hotel)}>Edit</button>
                       <button type="button" className={styles.dangerBtn} onClick={() => handleDelete(hotel._id)}>Delete</button>
                     </div>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      </div>
+                </article>
+              ))}
+            </div>
+
+            <div className={styles.paginationBar}>
+              <button
+                type="button"
+                className={styles.secondaryBtn}
+                disabled={hotelPage <= 1}
+                onClick={() => setHotelPage((current) => current - 1)}
+              >
+                Previous
+              </button>
+              <div className={styles.pageNumberRow}>
+                {hotelPageNumbers.map((pageNumber) => (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    className={pageNumber === hotelPage ? styles.primaryBtn : styles.secondaryBtn}
+                    onClick={() => setHotelPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className={styles.secondaryBtn}
+                disabled={hotelPage >= hotelTotalPages}
+                onClick={() => setHotelPage((current) => current + 1)}
+              >
+                Next
+              </button>
+            </div>
+          </>
+        )}
+      </section>
     </div>
   );
 }

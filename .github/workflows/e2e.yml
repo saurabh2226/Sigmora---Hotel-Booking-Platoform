@@ -10,7 +10,7 @@ on:
       base_url:
         description: 'Base URL to test against'
         required: false
-        default: 'http://127.0.0.1:4173'
+        default: 'http://localhost:5173'
   workflow_run:
     workflows: ["CD Pipeline"]
     types: [completed]
@@ -30,6 +30,10 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: ./backend
+
       - name: Install frontend dependencies
         run: npm ci
         working-directory: ./frontend
@@ -42,12 +46,29 @@ jobs:
         run: npx playwright install --with-deps
         working-directory: ./e2e
 
+      - name: Start backend server
+        run: |
+          npm run dev &
+          sleep 5
+        working-directory: ./backend
+        env:
+          NODE_ENV: test
+          PORT: 5000
+          JWT_ACCESS_SECRET: e2e_test_secret
+          JWT_REFRESH_SECRET: e2e_test_refresh_secret
+          MONGODB_URI: mongodb://localhost:27017/hotel-booking-e2e
+
+      - name: Start frontend dev server
+        run: |
+          npm run dev &
+          sleep 5
+        working-directory: ./frontend
+
       - name: Run Playwright tests
         run: npx playwright test
         working-directory: ./e2e
         env:
-          BASE_URL: ${{ github.event.inputs.base_url || 'http://127.0.0.1:4173' }}
-          VITE_API_URL: http://127.0.0.1:5000/api/v1
+          BASE_URL: ${{ github.event.inputs.base_url || 'http://localhost:5173' }}
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
