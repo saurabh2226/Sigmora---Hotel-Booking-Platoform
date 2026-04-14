@@ -33,6 +33,8 @@ const bookingSchema = new mongoose.Schema(
       name: String,
       email: String,
       phone: String,
+      checkInTime: String,
+      checkOutTime: String,
       specialRequests: String,
     },
     pricing: {

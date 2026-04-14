@@ -10,6 +10,32 @@ const { attachOffersToHotels } = require('../utils/offerUtils');
 const { emitHotelCatalogUpdate, emitHotelDetailUpdate } = require('../socket/socketHandler');
 const { syncHotelToSql } = require('../services/sqlMirrorService');
 
+const escapeRegex = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const buildSearchClauses = (search = '') => {
+  const terms = String(search)
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 6);
+
+  return terms.map((term) => {
+    const regex = new RegExp(escapeRegex(term), 'i');
+    return {
+      $or: [
+        { title: regex },
+        { slug: regex },
+        { description: regex },
+        { type: regex },
+        { amenities: regex },
+        { 'address.city': regex },
+        { 'address.state': regex },
+        { 'address.country': regex },
+      ],
+    };
+  });
+};
+
 // @desc    Get all hotels with filters, search, pagination
 // @route   GET /api/v1/hotels
 const getHotels = asyncHandler(async (req, res) => {
@@ -22,7 +48,7 @@ const getHotels = asyncHandler(async (req, res) => {
 
   // Search by text
   if (search) {
-    query.$text = { $search: search };
+    query.$and = [...(query.$and || []), ...buildSearchClauses(search)];
   }
 
   // Filter by city
@@ -138,7 +164,7 @@ const getSearchSuggestions = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, { suggestions: [] }));
   }
 
-  const regex = new RegExp(q, 'i');
+  const regex = new RegExp(escapeRegex(q), 'i');
 
   const [cities, hotels] = await Promise.all([
     Hotel.distinct('address.city', { 'address.city': regex, isActive: true }),

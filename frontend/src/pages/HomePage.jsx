@@ -264,7 +264,7 @@ export default function HomePage() {
 
   return (
     <div className="page">
-      <section className={styles.hero}>
+
         <div className={styles.heroPattern} />
         <div className={`container ${styles.heroInner}`}>
           <div className={styles.heroCopy}>
@@ -360,7 +360,7 @@ export default function HomePage() {
             </div> */}
           </div>
         </div>
-      </section>
+
 
       {offerItems.length > 0 && (
         <section className={styles.offerRailSection}>

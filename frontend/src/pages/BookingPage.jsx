@@ -5,10 +5,10 @@ import { FiCreditCard, FiArrowLeft, FiAlertCircle, FiMapPin, FiCalendar } from '
 import { createBooking } from '../redux/slices/bookingSlice';
 import { createRazorpayOrder, markRazorpayPaymentFailed, verifyRazorpayPayment } from '../api/paymentApi';
 import { getAvailability, getHotel, getRoom } from '../api/hotelApi';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatTime } from '../utils/formatters';
 import { DEFAULT_OFFER_COLOR, RAZORPAY_KEY } from '../utils/constants';
 import { formatInputDate, getMinCheckout, getNights, getToday, getTomorrow } from '../utils/dateUtils';
-import { isValidEmail, isValidPhone, isValidName, isFutureDate, isCheckoutAfterCheckin } from '../utils/validators';
+import { isValidEmail, isValidPhone, isValidName, isFutureDate, isCheckoutAfterCheckin, normalizePhoneInput } from '../utils/validators';
 import { getImageUrl } from '../utils/helpers';
 import { loadRazorpayCheckout, openRazorpayCheckout } from '../utils/razorpayCheckout';
 import { useSocket } from '../context/SocketContext';
@@ -31,7 +31,9 @@ export default function BookingPage() {
     children: 0,
     name: user?.name || '',
     email: user?.email || '',
-    phone: user?.phone || '',
+    phone: normalizePhoneInput(user?.phone || ''),
+    checkInTime: '',
+    checkOutTime: '',
     couponCode: '',
     specialRequests: '',
   });
@@ -95,6 +97,11 @@ export default function BookingPage() {
           hotel: hotelResponse.data.hotel,
           room: roomResponse.data.room,
           loading: false,
+        }));
+        setForm((current) => ({
+          ...current,
+          checkInTime: current.checkInTime || hotelResponse.data.hotel?.policies?.checkInTime || '14:00',
+          checkOutTime: current.checkOutTime || hotelResponse.data.hotel?.policies?.checkOutTime || '11:00',
         }));
       } catch (error) {
         if (ignore) return;
@@ -197,6 +204,14 @@ export default function BookingPage() {
         if (!value?.trim()) return 'Phone number is required';
         if (!isValidPhone(value)) return 'Enter a valid Indian phone number';
         return '';
+      case 'checkInTime':
+        if (!value) return 'Preferred check-in time is required';
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) return 'Enter a valid check-in time';
+        return '';
+      case 'checkOutTime':
+        if (!value) return 'Preferred check-out time is required';
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) return 'Enter a valid check-out time';
+        return '';
       case 'checkIn':
         if (!value) return 'Check-in date is required';
         if (!isFutureDate(value)) return 'Check-in cannot be earlier than today';
@@ -220,7 +235,8 @@ export default function BookingPage() {
   }, [form]);
 
   const handleChange = (name, value) => {
-    const nextForm = { ...form, [name]: value };
+    const nextValue = name === 'phone' ? normalizePhoneInput(value) : value;
+    const nextForm = { ...form, [name]: nextValue };
     const nextTouched = { ...touched };
     const nextErrors = { ...errors };
 
@@ -248,7 +264,7 @@ export default function BookingPage() {
   };
 
   const validateAll = () => {
-    const fields = ['name', 'email', 'phone', 'checkIn', 'checkOut', 'adults'];
+    const fields = ['name', 'email', 'phone', 'checkIn', 'checkOut', 'checkInTime', 'checkOutTime', 'adults'];
     const newErrors = {};
     fields.forEach((key) => {
       const error = validateField(key, form[key], form);
@@ -334,6 +350,8 @@ export default function BookingPage() {
         name: form.name,
         email: form.email,
         phone: form.phone,
+        checkInTime: form.checkInTime,
+        checkOutTime: form.checkOutTime,
         specialRequests: form.specialRequests,
       },
       couponCode: form.couponCode || undefined,
@@ -479,7 +497,7 @@ export default function BookingPage() {
           {stayDetails.roomAvailability && (
             <div className={`${styles.availabilityBanner} ${stayDetails.roomAvailability.available ? styles.available : styles.unavailable}`}>
               {stayDetails.roomAvailability.available
-                ? `Live availability confirmed: ${stayDetails.roomAvailability.availableCount} room${stayDetails.roomAvailability.availableCount === 1 ? '' : 's'} left for these dates.`
+                ? 'Selected stay details are ready for checkout.'
                 : 'Selected room is unavailable for these dates. Try different dates to continue.'}
             </div>
           )}
@@ -505,7 +523,7 @@ export default function BookingPage() {
               </div>
               <div className={getFieldClass('phone')}>
                 <label>Phone *</label>
-                <input type="tel" placeholder="+91XXXXXXXXXX" value={form.phone} onChange={e => handleChange('phone', e.target.value)} onBlur={() => handleBlur('phone')} required />
+                <input type="number" placeholder="10-digit mobile number" value={form.phone} onChange={e => handleChange('phone', e.target.value)} onBlur={() => handleBlur('phone')} required inputMode="numeric" min="0" />
                 {touched.phone && errors.phone && <span className={styles.errMsg}><FiAlertCircle size={12} /> {errors.phone}</span>}
               </div>
             </div>
@@ -515,7 +533,7 @@ export default function BookingPage() {
             <div className={styles.sectionHeader}>
               <div>
                 <h2>Stay Details</h2>
-                <p>Choose dates and occupancy. Pricing refreshes automatically for selected demand windows.</p>
+                <p>Choose dates, timings, and occupancy. Timing details are especially helpful for one-night stays.</p>
               </div>
             </div>
 
@@ -548,6 +566,16 @@ export default function BookingPage() {
                 <select value={form.children} onChange={e => handleChange('children', Number(e.target.value))}>
                   {[0, 1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
+              </div>
+              <div className={getFieldClass('checkInTime')}>
+                <label>Preferred Check-in Time *</label>
+                <input type="time" value={form.checkInTime} onChange={e => handleChange('checkInTime', e.target.value)} onBlur={() => handleBlur('checkInTime')} />
+                {touched.checkInTime && errors.checkInTime && <span className={styles.errMsg}><FiAlertCircle size={12} /> {errors.checkInTime}</span>}
+              </div>
+              <div className={getFieldClass('checkOutTime')}>
+                <label>Preferred Check-out Time *</label>
+                <input type="time" value={form.checkOutTime} onChange={e => handleChange('checkOutTime', e.target.value)} onBlur={() => handleBlur('checkOutTime')} />
+                {touched.checkOutTime && errors.checkOutTime && <span className={styles.errMsg}><FiAlertCircle size={12} /> {errors.checkOutTime}</span>}
               </div>
             </div>
             <p className={styles.dateHelper}>Past dates are disabled, and check-out must always be at least one day after check-in.</p>
@@ -641,6 +669,8 @@ export default function BookingPage() {
               <span>Stay</span>
               <span className={styles.summaryValueInline}><FiCalendar size={12} /> {nights > 0 ? `${nights} night${nights !== 1 ? 's' : ''}` : '—'}</span>
             </div>
+            <div className={styles.summaryRow}><span>Check-in time</span><span className={styles.summaryTextValue}>{formatTime(form.checkInTime)}</span></div>
+            <div className={styles.summaryRow}><span>Check-out time</span><span className={styles.summaryTextValue}>{formatTime(form.checkOutTime)}</span></div>
             <div className={styles.summaryRow}><span>Guests</span><span className={styles.summaryTextValue}>{form.adults} adult{form.adults > 1 ? 's' : ''}{form.children > 0 ? `, ${form.children} child${form.children > 1 ? 'ren' : ''}` : ''}</span></div>
             <div className={styles.summaryRow}><span>Base nightly rate</span><span className={styles.summaryTextValue}>{formatCurrency(stayDetails.room?.pricePerNight || 0)}</span></div>
             <div className={styles.summaryRow}><span>Live nightly rate</span><span className={styles.summaryTextValue}>{formatCurrency(livePricing?.nightlyRate || stayDetails.room?.pricePerNight || 0)}</span></div>
@@ -654,14 +684,6 @@ export default function BookingPage() {
               <div className={styles.dynamicNote}>
                 {livePricing.weekendNights > 0 && <span>{livePricing.weekendNights} weekend night{livePricing.weekendNights > 1 ? 's' : ''} at higher demand pricing.</span>}
                 {livePricing.holidayNights > 0 && <span>{livePricing.holidayNights} holiday night{livePricing.holidayNights > 1 ? 's' : ''} included in this quote.</span>}
-              </div>
-            )}
-
-            {stayDetails.roomAvailability && (
-              <div className={`${styles.summaryAvailability} ${stayDetails.roomAvailability.available ? styles.available : styles.unavailable}`}>
-                {stayDetails.roomAvailability.available
-                  ? `Live availability confirmed: ${stayDetails.roomAvailability.availableCount} room${stayDetails.roomAvailability.availableCount === 1 ? '' : 's'} left`
-                  : 'Selected room is unavailable for these dates'}
               </div>
             )}
 

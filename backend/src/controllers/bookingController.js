@@ -135,6 +135,8 @@ const createBooking = asyncHandler(async (req, res) => {
       guests: guests || { adults: 1, children: 0 },
       guestDetails: {
         ...guestDetails,
+        checkInTime: guestDetails?.checkInTime || hotel.policies?.checkInTime || '14:00',
+        checkOutTime: guestDetails?.checkOutTime || hotel.policies?.checkOutTime || '11:00',
         specialRequests: guestDetails?.specialRequests || '',
       },
       holdExpiresAt: holdMeta.holdExpiresAt,

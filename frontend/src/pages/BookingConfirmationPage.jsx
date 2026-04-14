@@ -18,7 +18,7 @@ import {
 } from 'react-icons/fi';
 import { fetchBooking } from '../redux/slices/bookingSlice';
 import { createRazorpayOrder, markRazorpayPaymentFailed, verifyRazorpayPayment } from '../api/paymentApi';
-import { formatCurrency, formatDateLong } from '../utils/formatters';
+import { formatCurrency, formatDateLong, formatTime } from '../utils/formatters';
 import { getImageUrl } from '../utils/helpers';
 import { RAZORPAY_KEY } from '../utils/constants';
 import { loadRazorpayCheckout, openRazorpayCheckout } from '../utils/razorpayCheckout';
@@ -222,6 +222,8 @@ export default function BookingConfirmationPage() {
                 <div className={styles.detailRow}><span>Booking ID</span><strong>{booking._id?.slice(-8).toUpperCase()}</strong></div>
                 <div className={styles.detailRow}><span>Check-in</span><strong>{formatDateLong(booking.checkIn)}</strong></div>
                 <div className={styles.detailRow}><span>Check-out</span><strong>{formatDateLong(booking.checkOut)}</strong></div>
+                <div className={styles.detailRow}><span>Check-in time</span><strong>{formatTime(booking.guestDetails?.checkInTime)}</strong></div>
+                <div className={styles.detailRow}><span>Check-out time</span><strong>{formatTime(booking.guestDetails?.checkOutTime)}</strong></div>
                 <div className={styles.detailRow}><span>Nights</span><strong>{nights}</strong></div>
                 <div className={styles.detailRow}><span>Guests</span><strong>{totalGuests} total</strong></div>
                 <div className={styles.detailRow}><span>Adults</span><strong>{adults}</strong></div>

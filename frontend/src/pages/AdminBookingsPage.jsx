@@ -8,6 +8,22 @@ import { formatCurrency, formatDate } from '../utils/formatters';
 import Loader from '../components/common/Loader/Loader';
 import styles from './AdminWorkspace.module.css';
 
+const getRefundSummary = (booking) => {
+  const totalPaid = Number(booking?.pricing?.totalPrice || 0);
+  const refundedSoFar = Number(booking?.refundAmount || 0);
+  const remainingRefundable = Math.max(0, totalPaid - refundedSoFar);
+  const suggestedAmount = booking?.payment?.status === 'partial_refunded'
+    ? remainingRefundable
+    : (refundedSoFar > 0 ? Math.min(refundedSoFar, remainingRefundable) : remainingRefundable);
+
+  return {
+    totalPaid,
+    refundedSoFar,
+    remainingRefundable,
+    suggestedAmount,
+  };
+};
+
 export default function AdminBookingsPage() {
   const [filters, setFilters] = useState({
     status: '',
@@ -19,6 +35,12 @@ export default function AdminBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [busyBookingId, setBusyBookingId] = useState('');
   const [statusDrafts, setStatusDrafts] = useState({});
+  const [refundDialog, setRefundDialog] = useState({
+    open: false,
+    booking: null,
+    amount: '',
+    note: '',
+  });
 
   const loadBookings = async () => {
     try {
@@ -60,6 +82,27 @@ export default function AdminBookingsPage() {
     });
   }, [bookings, search]);
 
+  const openRefundDialog = (booking) => {
+    const refundMeta = getRefundSummary(booking);
+    setRefundDialog({
+      open: true,
+      booking,
+      amount: refundMeta.suggestedAmount ? String(refundMeta.suggestedAmount) : '',
+      note: booking.status === 'cancelled'
+        ? 'Guest cancellation approved'
+        : 'Manual admin refund',
+    });
+  };
+
+  const closeRefundDialog = () => {
+    setRefundDialog({
+      open: false,
+      booking: null,
+      amount: '',
+      note: '',
+    });
+  };
+
   const handleStatusUpdate = async (bookingId) => {
     try {
       setBusyBookingId(bookingId);
@@ -74,15 +117,32 @@ export default function AdminBookingsPage() {
     }
   };
 
-  const handleRefund = async (booking) => {
-    const suggestedAmount = booking.refundAmount || booking.pricing?.totalPrice || 0;
-    const input = window.prompt('Refund amount in INR', String(suggestedAmount));
-    if (!input) return;
+  const handleRefundConfirm = async () => {
+    if (!refundDialog.booking) {
+      return;
+    }
+
+    const amount = Number(refundDialog.amount);
+    const refundMeta = getRefundSummary(refundDialog.booking);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error('Enter a valid refund amount');
+      return;
+    }
+
+    if (amount > refundMeta.remainingRefundable) {
+      toast.error(`Refund amount cannot exceed ${formatCurrency(refundMeta.remainingRefundable)}`);
+      return;
+    }
 
     try {
-      setBusyBookingId(booking._id);
-      await initiateRefund(booking._id, { amount: Number(input) });
-      toast.success('Refund initiated');
+      setBusyBookingId(refundDialog.booking._id);
+      await initiateRefund(refundDialog.booking._id, {
+        amount,
+        note: refundDialog.note,
+      });
+      toast.success('Refund initiated successfully');
+      closeRefundDialog();
       await loadBookings();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to initiate refund');
@@ -96,7 +156,7 @@ export default function AdminBookingsPage() {
       <div className={styles.header}>
         <div>
           <h1>Manage Bookings</h1>
-          <p>Track reservations, update booking lifecycle states, and issue Razorpay refunds when cancellations require it.</p>
+          <p>Track reservations, update booking lifecycle states, and issue refunds with a clear operator workflow.</p>
         </div>
         <div className={styles.actions}>
           <Link to="/admin" className={styles.secondaryBtn}>Back to Dashboard</Link>
@@ -127,8 +187,8 @@ export default function AdminBookingsPage() {
             <span>Total bookings</span>
           </div>
           <div className={styles.metricCard}>
-            <strong>{bookings.filter((booking) => booking.payment?.status === 'completed').length}</strong>
-            <span>Paid on this page</span>
+            <strong>{bookings.filter((booking) => ['completed', 'partial_refunded'].includes(booking.payment?.status)).length}</strong>
+            <span>Refund-eligible on this page</span>
           </div>
           <div className={styles.metricCard}>
             <strong>{bookings.filter((booking) => booking.status === 'cancelled').length}</strong>
@@ -150,84 +210,90 @@ export default function AdminBookingsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredBookings.map((booking) => (
-                  <tr key={booking._id}>
-                    <td>
-                      <strong>#{booking._id.slice(-6).toUpperCase()}</strong>
-                      <div className={styles.metaText}>{booking.user?.name}</div>
-                      <div className={styles.metaText}>{booking.user?.email}</div>
-                    </td>
-                    <td>
-                      <strong>{booking.hotel?.title || 'Hotel removed'}</strong>
-                      <div className={styles.metaText}>{formatDate(booking.checkIn)} → {formatDate(booking.checkOut)}</div>
-                    </td>
-                    <td>
-                      <strong>{formatCurrency(booking.pricing?.totalPrice || 0)}</strong>
-                      <div className={styles.metaText}>Refundable {formatCurrency(booking.refundAmount || 0)}</div>
-                    </td>
-                    <td>
-                      <span
-                        className={styles.pill}
-                        style={{
-                          background: booking.payment?.status === 'completed'
-                            ? 'rgba(16,185,129,0.12)'
-                            : ['refunded', 'partial_refunded'].includes(booking.payment?.status)
-                              ? 'rgba(59,130,246,0.12)'
-                              : 'rgba(245,158,11,0.12)',
-                          color: booking.payment?.status === 'completed'
-                            ? '#10b981'
-                            : ['refunded', 'partial_refunded'].includes(booking.payment?.status)
-                              ? '#3b82f6'
-                              : '#d97706',
-                        }}
-                      >
-                        {booking.payment?.status || 'pending'}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={styles.pill}
-                        style={{
-                          background: `${STATUS_COLORS[booking.status] || '#6366f1'}20`,
-                          color: STATUS_COLORS[booking.status] || '#6366f1',
-                        }}
-                      >
-                        {booking.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className={styles.stack}>
-                        <select
-                          className={styles.select}
-                          value={statusDrafts[booking._id] || booking.status}
-                          onChange={(e) => setStatusDrafts((current) => ({ ...current, [booking._id]: e.target.value }))}
+                {filteredBookings.map((booking) => {
+                  const refundMeta = getRefundSummary(booking);
+                  const canRefund = ['completed', 'partial_refunded'].includes(booking.payment?.status) && refundMeta.remainingRefundable > 0;
+
+                  return (
+                    <tr key={booking._id}>
+                      <td>
+                        <strong>#{booking._id.slice(-6).toUpperCase()}</strong>
+                        <div className={styles.metaText}>{booking.user?.name}</div>
+                        <div className={styles.metaText}>{booking.user?.email}</div>
+                      </td>
+                      <td>
+                        <strong>{booking.hotel?.title || 'Hotel removed'}</strong>
+                        <div className={styles.metaText}>{formatDate(booking.checkIn)} → {formatDate(booking.checkOut)}</div>
+                      </td>
+                      <td>
+                        <strong>{formatCurrency(booking.pricing?.totalPrice || 0)}</strong>
+                        <div className={styles.metaText}>Refunded so far {formatCurrency(refundMeta.refundedSoFar)}</div>
+                        <div className={styles.metaText}>Remaining {formatCurrency(refundMeta.remainingRefundable)}</div>
+                      </td>
+                      <td>
+                        <span
+                          className={styles.pill}
+                          style={{
+                            background: booking.payment?.status === 'completed'
+                              ? 'rgba(16,185,129,0.12)'
+                              : ['refunded', 'partial_refunded'].includes(booking.payment?.status)
+                                ? 'rgba(59,130,246,0.12)'
+                                : 'rgba(245,158,11,0.12)',
+                            color: booking.payment?.status === 'completed'
+                              ? '#10b981'
+                              : ['refunded', 'partial_refunded'].includes(booking.payment?.status)
+                                ? '#3b82f6'
+                                : '#d97706',
+                          }}
                         >
-                          {BOOKING_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
-                        </select>
-                        <div className={styles.inlineActions}>
-                          <button
-                            type="button"
-                            className={styles.primaryBtn}
-                            disabled={busyBookingId === booking._id}
-                            onClick={() => handleStatusUpdate(booking._id)}
+                          {booking.payment?.status || 'pending'}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={styles.pill}
+                          style={{
+                            background: `${STATUS_COLORS[booking.status] || '#6366f1'}20`,
+                            color: STATUS_COLORS[booking.status] || '#6366f1',
+                          }}
+                        >
+                          {booking.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className={styles.stack}>
+                          <select
+                            className={styles.select}
+                            value={statusDrafts[booking._id] || booking.status}
+                            onChange={(e) => setStatusDrafts((current) => ({ ...current, [booking._id]: e.target.value }))}
                           >
-                            {busyBookingId === booking._id ? 'Saving...' : 'Save'}
-                          </button>
-                          {!isOwner && booking.payment?.status === 'completed' && (
+                            {BOOKING_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+                          </select>
+                          <div className={styles.inlineActions}>
                             <button
                               type="button"
-                              className={styles.secondaryBtn}
+                              className={styles.primaryBtn}
                               disabled={busyBookingId === booking._id}
-                              onClick={() => handleRefund(booking)}
+                              onClick={() => handleStatusUpdate(booking._id)}
                             >
-                              Refund
+                              {busyBookingId === booking._id ? 'Saving...' : 'Save'}
                             </button>
-                          )}
+                            {canRefund ? (
+                              <button
+                                type="button"
+                                className={styles.secondaryBtn}
+                                disabled={busyBookingId === booking._id}
+                                onClick={() => openRefundDialog(booking)}
+                              >
+                                Refund
+                              </button>
+                            ) : null}
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
                 {filteredBookings.length === 0 && (
                   <tr>
                     <td colSpan="6">
@@ -260,6 +326,68 @@ export default function AdminBookingsPage() {
           </button>
         </div>
       </div>
+
+      {refundDialog.open && refundDialog.booking ? (
+        <div className={styles.modalOverlay} role="presentation" onClick={closeRefundDialog}>
+          <div className={styles.modalCard} role="dialog" aria-modal="true" aria-labelledby="refund-dialog-title" onClick={(event) => event.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div>
+                <span className={styles.modalEyebrow}>Refund flow</span>
+                <h2 id="refund-dialog-title">Confirm refund</h2>
+                <p>Review the payout amount before we send the refund request to Razorpay.</p>
+              </div>
+            </div>
+
+            <div className={styles.modalSummary}>
+              <div>
+                <span>Booking</span>
+                <strong>#{refundDialog.booking._id.slice(-6).toUpperCase()}</strong>
+              </div>
+              <div>
+                <span>Total paid</span>
+                <strong>{formatCurrency(getRefundSummary(refundDialog.booking).totalPaid)}</strong>
+              </div>
+              <div>
+                <span>Already refunded</span>
+                <strong>{formatCurrency(getRefundSummary(refundDialog.booking).refundedSoFar)}</strong>
+              </div>
+              <div>
+                <span>Remaining</span>
+                <strong>{formatCurrency(getRefundSummary(refundDialog.booking).remainingRefundable)}</strong>
+              </div>
+            </div>
+
+            <label className={styles.modalField}>
+              <span>Refund amount</span>
+              <input
+                className={styles.input}
+                type="number"
+                min="1"
+                step="0.01"
+                value={refundDialog.amount}
+                onChange={(event) => setRefundDialog((current) => ({ ...current, amount: event.target.value }))}
+              />
+            </label>
+
+            <label className={styles.modalField}>
+              <span>Operator note</span>
+              <textarea
+                className={styles.textarea}
+                value={refundDialog.note}
+                onChange={(event) => setRefundDialog((current) => ({ ...current, note: event.target.value }))}
+                placeholder="Optional note for refund tracking"
+              />
+            </label>
+
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.secondaryBtn} onClick={closeRefundDialog}>Cancel</button>
+              <button type="button" className={styles.primaryBtn} disabled={busyBookingId === refundDialog.booking._id} onClick={handleRefundConfirm}>
+                {busyBookingId === refundDialog.booking._id ? 'Processing refund...' : 'Send refund'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -23,13 +23,25 @@ export default function Navbar() {
   const isAdmin = normalizedRole === 'admin';
   const dashboardLabel = isAdmin ? 'Admin Panel' : 'My Bookings';
   const dashboardLink = getDashboardPathForRole(normalizedRole);
+  const adminNavLinks = [
+    { to: '/admin', label: 'Dashboard' },
+    { to: '/admin/community', label: 'Community' },
+    { to: '/admin/reports', label: 'Reports' },
+    { to: '/admin/hotels', label: 'Hotels' },
+    { to: '/admin/users', label: 'Users' },
+    { to: '/admin/bookings', label: 'Bookings' },
+    { to: '/admin/reviews', label: 'Reviews' },
+    { to: '/admin/offers', label: 'Offers' },
+    { to: '/support', label: 'Support' },
+  ];
 
-  const navLinks = [
+  const defaultNavLinks = [
     { to: '/', label: 'Home' },
     { to: '/hotels', label: 'Hotels' },
     { to: '/about', label: 'About' },
     ...(isAuthenticated ? [{ to: '/support', label: 'Support' }] : []),
   ];
+  const navLinks = isAdmin ? adminNavLinks : defaultNavLinks;
 
   const handleNavClick = () => {
     setMobileOpen(false);
@@ -82,9 +94,9 @@ export default function Navbar() {
           <span className={styles.logoText}>Sig<span className={styles.logoAccent}>mora</span></span>
         </Link>
 
-        <div className={`${styles.navLinks} ${mobileOpen ? styles.open : ''}`}>
+        <div className={`${styles.navLinks} ${isAdmin ? styles.navLinksDense : ''} ${mobileOpen ? styles.open : ''}`}>
           {navLinks.map((item) => (
-            <Link key={item.to} to={item.to} className={styles.navLink} onClick={handleNavClick}>
+            <Link key={item.to} to={item.to} className={`${styles.navLink} ${isAdmin ? styles.navLinkCompact : ''}`} onClick={handleNavClick}>
               {item.label}
             </Link>
           ))}
